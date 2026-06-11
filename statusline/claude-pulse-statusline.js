@@ -30,9 +30,9 @@ const RED    = "\x1b[31m";
 const DIM    = "\x1b[2m";
 const RESET  = "\x1b[0m";
 // Accent for the window icon + label — the % value keeps its severity color.
-// Truecolor: 5h = light pink (#FF8FC8), wk = light orchid-purple (#C792EA).
-const PINK   = "\x1b[38;2;255;143;200m";
-const ACCENT = "\x1b[38;2;199;146;234m";
+// 5h = normal/default text; wk = light pink (#FF8FC8).
+// (The orchid-purple #C792EA now lives on the git-branch segment in the statusline wrapper.)
+const PINK = "\x1b[38;2;255;143;200m";
 
 function colorFor(util) {
   if (util === null || util === undefined) return DIM;
@@ -138,7 +138,7 @@ function main() {
   const fh = snapshot.five_hour;
   const fhUtil = fh?.utilization ?? null;
   const fhPct = fmtPct(fhUtil);
-  parts.push(`${PINK}◔ 5h${RESET} ${colorize(fhPct, fhUtil)}`);
+  parts.push(`◔ 5h ${colorize(fhPct, fhUtil)}`);
 
   // --- Weekly window ---
   const wk = snapshot.weekly;
@@ -146,7 +146,7 @@ function main() {
   const wkPct = fmtPct(wkUtil);
   const wkCountdown = wk?.resets_at ? formatCountdown(wk.resets_at) : null;
   const wkReset = wkCountdown ? ` ${AMBER}⟳ ${wkCountdown}${RESET}` : "";
-  parts.push(`${ACCENT}◔ wk${RESET} ${colorize(wkPct, wkUtil)}${wkReset}`);
+  parts.push(`${PINK}◔ wk${RESET} ${colorize(wkPct, wkUtil)}${wkReset}`);
 
   // --- Extra usage credits ---
   const credits = fmtCredits(snapshot.extra_usage);

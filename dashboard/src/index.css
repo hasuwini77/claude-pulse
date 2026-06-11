@@ -8,23 +8,24 @@
   --surface-raised:  oklch(0.25 0.015 255);
   --hairline:        oklch(0.31 0.018 255);
 
-  /* Text */
-  --text:            oklch(0.95 0.008 255);
+  /* Text — softened off-white (less glare on dark; still AA) */
+  --text:            oklch(0.93 0.008 255);
   --text-muted:      oklch(0.70 0.014 255);
   --text-dim:        oklch(0.66 0.014 255);  /* 5.52:1 on --bg — passes WCAG AA */
 
-  /* Severity (only saturated colors on page) */
-  --sev-ok:   oklch(0.80 0.15 158);
-  --sev-warn: oklch(0.81 0.14  80);
-  --sev-crit: oklch(0.66 0.20  22);
+  /* Severity (only saturated colors on page) — calmed to match the statusline */
+  --sev-ok:   oklch(0.80 0.12 158);
+  --sev-warn: oklch(0.81 0.13  82);
+  --sev-crit: oklch(0.68 0.17  22);
 
   /* Zone tracks — raised enough to read as gauge track on --surface */
   --zone-ok:   oklch(0.43 0.06 158);
   --zone-warn: oklch(0.43 0.06  80);
   --zone-crit: oklch(0.43 0.08  22);
 
-  /* Accent — ice/steel (credit meter + focus ring only) */
-  --accent: oklch(0.74 0.09 232);
+  /* Accent — orchid-purple (credit meter + focus ring only); matches the
+     statusline's branch/signature accent so both surfaces feel like one product. */
+  --accent: oklch(0.72 0.13 305);
 
   /* Shadows / elevation */
   --rim:   inset 0 1px 0 oklch(1 0 0 / .05);

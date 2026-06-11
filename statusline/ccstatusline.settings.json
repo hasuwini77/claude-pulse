@@ -1,0 +1,29 @@
+{
+  "version": 3,
+  "lines": [
+    [
+      { "id": "1", "type": "model", "color": "brightGreen" },
+      { "id": "2", "type": "separator" },
+      { "id": "3", "type": "context-percentage", "color": "brightYellow" }
+    ],
+    [
+      { "id": "git-branch", "type": "git-branch", "color": "brightMagenta" },
+      { "id": "sep-2", "type": "separator" },
+      { "id": "git-worktree", "type": "git-worktree", "color": "cyan" }
+    ],
+    []
+  ],
+  "flexMode": "full-minus-40",
+  "compactThreshold": 60,
+  "colorLevel": 3,
+  "inheritSeparatorColors": false,
+  "globalBold": false,
+  "powerline": {
+    "enabled": false,
+    "separators": [""],
+    "separatorInvertBackground": [false],
+    "startCaps": [],
+    "endCaps": [],
+    "autoAlign": false
+  }
+}

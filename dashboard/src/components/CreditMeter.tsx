@@ -27,7 +27,7 @@ export function CreditMeter({ data }: CreditMeterProps) {
           fontSize: 10,
           fontWeight: 600,
           letterSpacing: '0.12em',
-          color: 'var(--text-dim)',
+          color: 'var(--accent)',
           textTransform: 'uppercase',
         }}>
           {enabled ? 'Extra Usage Credit' : 'Extra Usage Off'}

@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import type { HistoryPoint } from '../types'
-import { severity, sevColor } from '../utils/severity'
 
 interface SparkLineProps {
   data:   HistoryPoint[]
@@ -58,11 +57,10 @@ export function SparkLine({ data, width = 900, height = 88 }: SparkLineProps) {
   const wkPts   = toSVGPoints(data, 'weekly',    W, H)
   const fhPts   = toSVGPoints(data, 'five_hour', W, H)
 
-  // Color last valid-value severity for each series (skip nulls via filtered pts)
-  const wkSev  = severity(wkPts.length ? wkPts[wkPts.length - 1].v : null)
-  const fhSev  = severity(fhPts.length ? fhPts[fhPts.length - 1].v : null)
-  const wkColor = sevColor(wkSev)
-  const fhColor = sevColor(fhSev)
+  // Series identity by window hue (matches the gauges + statusline), so the two
+  // lines and the legend are distinguishable. Severity is read from the 60/85 gridlines.
+  const fhColor = 'var(--win-5h)' // pink
+  const wkColor = 'var(--win-wk)' // lavender
 
   // Day tick labels
   const days = new Map<string, number>()

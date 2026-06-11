@@ -170,7 +170,7 @@ export default function App() {
                 fontWeight: 600,
                 letterSpacing: '0.16em',
                 textTransform: 'uppercase',
-                color: 'var(--text-dim)',
+                color: 'var(--accent)',
                 marginBottom: 16,
               }}>
                 Per Model · Weekly
@@ -219,7 +219,7 @@ export default function App() {
               fontWeight: 600,
               letterSpacing: '0.16em',
               textTransform: 'uppercase',
-              color: 'var(--text-dim)',
+              color: 'var(--accent)',
               marginBottom: 16,
             }}>
               7-Day Telemetry

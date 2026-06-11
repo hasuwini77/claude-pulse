@@ -51,11 +51,17 @@ jobs:
 
       - name: Security — assert no secrets in bundle
         run: |
-          if grep -r "sk-ant-\|Bearer \|accessToken\|api\.anthropic\.com" dashboard/dist/assets/ 2>/dev/null; then
-            echo "FAIL: secret pattern found in bundle"
+          set -euo pipefail
+          dist="dashboard/dist"
+          if [ ! -d "$dist" ]; then
+            echo "FAIL: dist/ missing from workspace — build did not produce output"
             exit 1
           fi
-          echo "security check passed — no secrets in bundle"
+          if grep -rq "sk-ant-\|Bearer \|api\.anthropic\.com\|accessToken" "$dist/"; then
+            echo "FAIL: secret pattern found in dist/"
+            exit 1
+          fi
+          echo "security check passed — no secrets in dist/"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

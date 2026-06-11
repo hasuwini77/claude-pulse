@@ -22,5 +22,6 @@
     "used_credits": 0,
     "currency": "EUR"
   },
-  "error": null
+  "error": "timeout",
+  "last_attempt_at": "2026-06-11T13:45:01.292Z"
 }

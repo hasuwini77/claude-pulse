@@ -37,8 +37,8 @@ else
   exit 1
 fi
 
-# ── 2. Stage ONLY data/ — never secrets or the whole tree ─────────────────
-git add data/
+# ── 2. Stage explicit allowlist only — mirrors vite copyDataPlugin whitelist
+git add data/usage.json data/history.json
 
 # ── 3. Commit if there are staged changes ─────────────────────────────────
 if git diff --cached --quiet; then

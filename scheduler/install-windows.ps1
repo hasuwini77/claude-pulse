@@ -63,8 +63,8 @@ if (Test-Path $CoreCli) {
     exit 1
 }
 
-# 2. Stage ONLY data\ — never secrets
-git add "data\"
+# 2. Stage explicit allowlist only — mirrors vite copyDataPlugin whitelist
+git add "data\usage.json" "data\history.json"
 if ($LASTEXITCODE -ne 0) { Write-Log "git add FAILED (exit $LASTEXITCODE)"; exit 1 }
 
 # 3. Commit if changed

@@ -1,0 +1,9 @@
+{
+  "fetched_at": "2026-06-11T09:30:00Z",
+  "five_hour": { "utilization": 25.0, "resets_at": "2026-06-11T09:59:59Z" },
+  "weekly": { "utilization": 26.0, "resets_at": "2026-06-12T17:59:59Z" },
+  "weekly_sonnet": { "utilization": 23.0, "resets_at": "2026-06-12T18:00:00Z" },
+  "weekly_opus": { "utilization": null, "resets_at": null },
+  "extra_usage": { "enabled": true, "monthly_limit": 17000, "used_credits": 0.0, "currency": "EUR" },
+  "error": null
+}

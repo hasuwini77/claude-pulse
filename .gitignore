@@ -1,0 +1,25 @@
+# --- SECRETS: never commit (token-bearing) ---
+.credentials.json
+**/.credentials.json
+.env
+.env.*
+*.token
+*.secret
+secrets/
+.claude/
+
+# --- deps / build ---
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# --- os / editor ---
+.DS_Store
+Thumbs.db
+*.log
+
+# --- agentille scaffolding ---
+worktree-*/
+.dev-server.*

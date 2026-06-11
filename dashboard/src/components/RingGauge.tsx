@@ -9,7 +9,9 @@ const SWEEP = 0.75                // 270° sweep
 
 /**
  * dasharray + dashoffset to draw an arc occupying [a%, b%] of the 270° sweep.
- * The SVG element is rotated -135° via CSS so the arc starts at lower-left.
+ * The SVG element is rotated +135° CW so the stroke origin (3 o'clock) lands at
+ * 7:30 (lower-left), giving a conventional tachometer sweep from lower-left →
+ * top → lower-right.
  */
 function dashFor(a: number, b: number): CSSProperties {
   return {
@@ -27,11 +29,8 @@ function arcPoint(pct: number, r: number) {
   }
 }
 
-const ZONES: Array<[number, number, string]> = [
-  [0,  60, 'var(--zone-ok)'],
-  [60, 85, 'var(--zone-warn)'],
-  [85, 100,'var(--zone-crit)'],
-]
+// Single neutral track — oklch(0.52) gives 3.05:1 against --surface(0.21); clearly reads as gauge channel
+const TRACK_STROKE = 'oklch(0.52 0.010 255)'
 
 const THRESHOLDS = [
   { pct: 60, label: '60' },
@@ -54,10 +53,10 @@ export function RingGaugeSkeleton() {
     >
       <div className="relative grid place-items-center">
         <svg viewBox="0 0 200 200" width={200} height={200}
-          style={{ transform: 'rotate(-135deg)' }}>
-          {/* Full ghosted ring */}
+          style={{ transform: 'rotate(135deg)' }}>
+          {/* Track ring for skeleton */}
           <circle cx={100} cy={100} r={R} fill="none"
-            stroke="var(--surface-raised)" strokeWidth={10}
+            stroke={TRACK_STROKE} strokeWidth={10}
             strokeLinecap="butt"
             style={{ ...dashFor(0, 100) }}
             className="skeleton" />
@@ -109,38 +108,25 @@ export function RingGauge({ label, utilization, resetsAt, now, isError, isStale 
         filter: isStale ? 'saturate(0.45)' : undefined,
       }}
     >
-      {/* SVG rotated -135° so arc starts at lower-left */}
+      {/* SVG rotated +135° CW: stroke origin (3-o'clock) → 7:30 lower-left */}
       <svg
         viewBox="0 0 200 200"
         width={200}
         height={200}
         aria-hidden="true"
-        style={{ transform: 'rotate(-135deg)' }}
+        style={{ transform: 'rotate(135deg)' }}
       >
-        {/* Baseline track — dim full-sweep ring so low % values still read as a gauge */}
+        {/* Single neutral track — 3.05:1 against --surface; reads clearly as gauge channel */}
         <circle
           cx={100} cy={100} r={R}
           fill="none"
-          stroke="var(--surface-raised)"
-          strokeWidth={12}
+          stroke={TRACK_STROKE}
+          strokeWidth={10}
           strokeLinecap="butt"
           style={dashFor(0, 100) as CSSProperties}
         />
 
-        {/* Zone tracks — ok / warn / crit bands over baseline */}
-        {ZONES.map(([a, b, c]) => (
-          <circle
-            key={a}
-            cx={100} cy={100} r={R}
-            fill="none"
-            stroke={c}
-            strokeWidth={10}
-            strokeLinecap="butt"
-            style={dashFor(a, b) as CSSProperties}
-          />
-        ))}
-
-        {/* Threshold ticks at 60% and 85% */}
+        {/* Threshold ticks at 60% and 85% — sit on the now-visible track */}
         {THRESHOLDS.map(({ pct, label: tickLabel }) => {
           const inner = arcPoint(pct, R - 7)
           const outer = arcPoint(pct, R + 7)
@@ -163,8 +149,8 @@ export function RingGauge({ label, utilization, resetsAt, now, isError, isStale 
                 fontFamily="var(--font-body)"
                 fontWeight={500}
                 letterSpacing="0.06em"
-                /* counter-rotate so label stays readable */
-                transform={`rotate(135 ${lp.x} ${lp.y})`}
+                /* counter-rotate -135° to undo the +135° CSS rotation */
+                transform={`rotate(-135 ${lp.x} ${lp.y})`}
               >
                 {tickLabel}
               </text>
@@ -172,31 +158,19 @@ export function RingGauge({ label, utilization, resetsAt, now, isError, isStale 
           )
         })}
 
-        {/* Live arc — fills to current value */}
+        {/* Live arc — butt cap so endpoints don't bloom; severity color fills the track */}
         {hasValue && (
           <circle
             cx={100} cy={100} r={R}
             fill="none"
             stroke={fill}
             strokeWidth={10}
-            strokeLinecap="round"
+            strokeLinecap="butt"
             style={{
               ...dashFor(0, Math.min(100, Math.max(0, util))) as CSSProperties,
-              filter: `drop-shadow(0 0 10px ${fill})`,
+              filter: `drop-shadow(0 0 3px ${fill})`,
               transition: 'stroke-dasharray .72s cubic-bezier(.16,1,.3,1)',
             }}
-          />
-        )}
-
-        {/* Null / unavailable: dim full ring instead */}
-        {!hasValue && (
-          <circle
-            cx={100} cy={100} r={R}
-            fill="none"
-            stroke="var(--surface-raised)"
-            strokeWidth={10}
-            strokeLinecap="butt"
-            style={dashFor(0, 100) as CSSProperties}
           />
         )}
       </svg>

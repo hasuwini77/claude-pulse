@@ -7,62 +7,68 @@ interface CreditMeterProps {
 
 export function CreditMeter({ data }: CreditMeterProps) {
   const { monthly_limit, used_credits, currency, enabled } = data
-  const pct = monthly_limit > 0 ? Math.min(100, (used_credits / monthly_limit) * 100) : 0
-  const usedFmt = formatCredits(used_credits, currency)
+  const pct = monthly_limit > 0
+    ? Math.min(100, (used_credits / monthly_limit) * 100)
+    : 0
+  const usedFmt  = formatCredits(used_credits, currency)
   const limitFmt = formatCredits(monthly_limit, currency)
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between mb-2">
-        <span
-          className="font-condensed font-semibold tracking-[0.12em] uppercase"
-          style={{ fontSize: 10, color: 'var(--text-faint)' }}
-        >
-          Extra Usage
+    <div style={{ opacity: enabled ? 1 : 0.42 }}>
+      {/* Label row */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+      }}>
+        <span style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '0.12em',
+          color: 'var(--text-dim)',
+          textTransform: 'uppercase',
+        }}>
+          {enabled ? 'Extra Usage Credit' : 'Extra Usage Off'}
         </span>
-        {!enabled && (
-          <span
-            className="font-condensed"
-            style={{ fontSize: 11, color: 'var(--text-faint)' }}
-          >
-            disabled
+        {enabled && (
+          <span style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 12,
+            fontWeight: 600,
+            fontVariantNumeric: 'tabular-nums',
+            color: 'var(--text-muted)',
+          }}>
+            {usedFmt} / {limitFmt}
           </span>
         )}
       </div>
 
-      {/* Bar track */}
+      {/* Bar track — ice accent fill (NOT severity colors; credit is a different axis) */}
       <div
-        className="w-full rounded-sm overflow-hidden"
-        style={{ height: 3, background: 'var(--track)' }}
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={`Extra usage: ${usedFmt} of ${limitFmt}`}
+        style={{
+          height: 3,
+          background: 'var(--surface-raised)',
+          borderRadius: 2,
+          overflow: 'hidden',
+          border: '1px solid var(--hairline)',
+        }}
       >
         <div
-          className="h-full transition-all duration-1000 ease-out"
           style={{
+            height: '100%',
             width: `${pct}%`,
-            background: pct > 80 ? 'var(--crit)' : pct > 50 ? 'var(--warn)' : 'var(--ok)',
+            background: enabled ? 'var(--accent)' : 'var(--text-dim)',
+            borderRadius: 2,
+            transition: 'width 800ms ease-out',
           }}
         />
-      </div>
-
-      {/* Labels */}
-      <div className="flex justify-between mt-1.5">
-        <span
-          className="font-condensed font-medium tabular-nums"
-          style={{ fontSize: 12, color: 'var(--text-prime)' }}
-        >
-          {usedFmt}
-        </span>
-        <span
-          className="font-condensed tabular-nums"
-          style={{ fontSize: 12, color: 'var(--text-muted)' }}
-        >
-          {limitFmt}
-        </span>
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-import { severity, SEVERITY_CLASS } from '../utils/severity'
+import { severity, sevColor } from '../utils/severity'
 import { formatCountdown } from '../utils/format'
 
 interface CountdownProps {
@@ -8,38 +8,24 @@ interface CountdownProps {
   label?: string
 }
 
+/** Standalone countdown — kept for possible external use; gauges embed the countdown directly. */
 export function Countdown({ resetsAt, utilization, now, label = 'resets in' }: CountdownProps) {
-  const sev = severity(utilization)
-  const time = formatCountdown(resetsAt, now)
+  const sev   = severity(utilization)
+  const color = sevColor(sev)
+  const time  = formatCountdown(resetsAt, now)
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Refresh icon */}
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path
-          d="M13.5 2.5A7 7 0 1 0 14.9 8.5"
-          stroke="var(--text-faint)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <polyline
-          points="15,5 15,2 12,2"
-          stroke="var(--text-faint)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span
-        className="font-condensed"
-        style={{ fontSize: 13, color: 'var(--text-faint)' }}
-      >
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-dim)' }}>
         {label}
       </span>
-      <span
-        className={`font-condensed font-medium tabular-nums ${SEVERITY_CLASS[sev]}`}
-        style={{ fontSize: 13 }}
-      >
+      <span style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 12,
+        fontWeight: 600,
+        fontVariantNumeric: 'tabular-nums',
+        color,
+      }}>
         {time}
       </span>
     </div>

@@ -1,256 +1,250 @@
 import { useUsageData } from './hooks/useUsageData'
 import { StatusBar } from './components/StatusBar'
-import { RingGauge } from './components/RingGauge'
-import { Countdown } from './components/Countdown'
+import { RingGauge, RingGaugeSkeleton } from './components/RingGauge'
 import { ModelRow } from './components/ModelRow'
 import { CreditMeter } from './components/CreditMeter'
 import { SparkLine } from './components/SparkLine'
 
-function Divider({ label }: { label?: string }) {
+// ── Skeleton page ────────────────────────────────────────────────────────
+function SkeletonPage() {
   return (
-    <div className="flex items-center gap-3 my-6">
-      <div className="h-px flex-1" style={{ background: 'var(--border-faint)' }} />
-      {label && (
-        <span
-          className="font-condensed font-semibold tracking-[0.16em] uppercase shrink-0"
-          style={{ fontSize: 9, color: 'var(--text-faint)' }}
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '28px 32px 48px' }}>
+      {/* Masthead shimmer */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div className="skeleton" style={{ width: 180, height: 20, borderRadius: 'var(--r-sm)', background: 'var(--surface-raised)' }} />
+        <div className="skeleton" style={{ width: 100, height: 14, borderRadius: 'var(--r-sm)', background: 'var(--surface-raised)' }} />
+      </div>
+      <div style={{ height: 1, background: 'var(--hairline)', marginBottom: 32 }} />
+      {/* Gauge row */}
+      <div style={{ display: 'flex', gap: 24 }}>
+        <RingGaugeSkeleton />
+        <RingGaugeSkeleton />
+        {/* Rail skeleton */}
+        <div
+          className="flex-1"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--hairline)',
+            borderRadius: 'var(--r-md)',
+            boxShadow: 'var(--rim), var(--panel)',
+            padding: 'var(--space-xl)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20,
+          }}
         >
-          {label}
-        </span>
-      )}
-      <div className="h-px flex-1" style={{ background: 'var(--border-faint)' }} />
-    </div>
-  )
-}
-
-function LoadingScreen() {
-  return (
-    <div
-      className="flex items-center justify-center min-h-screen"
-      style={{ background: 'var(--bg-base)' }}
-    >
-      <div className="flex flex-col items-center gap-4">
-        {/* Simple animated ring */}
-        <svg width={64} height={64} viewBox="0 0 64 64" aria-label="Loading">
-          <circle
-            cx={32} cy={32} r={24}
-            fill="none"
-            stroke="var(--track)"
-            strokeWidth={4}
-          />
-          <circle
-            cx={32} cy={32} r={24}
-            fill="none"
-            stroke="var(--ok)"
-            strokeWidth={4}
-            strokeLinecap="round"
-            strokeDasharray="40 112"
-            style={{
-              transformOrigin: '50% 50%',
-              animation: 'spin 1.2s linear infinite',
-            }}
-          />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </svg>
-        <span
-          className="font-condensed tracking-[0.14em] uppercase"
-          style={{ fontSize: 11, color: 'var(--text-faint)' }}
-        >
-          Reading snapshot
-        </span>
+          {[0, 1, 2].map(i => (
+            <div key={i} className="skeleton" style={{ width: '100%', height: 16, borderRadius: 'var(--r-sm)', background: 'var(--surface-raised)' }} />
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-function ErrorScreen({ message }: { message?: string }) {
-  return (
-    <div
-      className="flex items-center justify-center min-h-screen"
-      style={{ background: 'var(--bg-base)' }}
-    >
-      <div className="flex flex-col items-center gap-3 max-w-sm text-center">
-        <svg width={32} height={32} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx={12} cy={12} r={10} stroke="var(--crit)" strokeWidth={1.5} />
-          <line x1={12} y1={7} x2={12} y2={13} stroke="var(--crit)" strokeWidth={1.5} strokeLinecap="round" />
-          <circle cx={12} cy={17} r={1} fill="var(--crit)" />
-        </svg>
-        <span
-          className="font-condensed font-medium"
-          style={{ fontSize: 13, color: 'var(--text-prime)' }}
-        >
-          Failed to load snapshot
-        </span>
-        {message && (
-          <span
-            className="font-condensed"
-            style={{ fontSize: 11, color: 'var(--text-muted)' }}
-          >
-            {message}
-          </span>
-        )}
-        <span
-          className="font-condensed"
-          style={{ fontSize: 11, color: 'var(--text-faint)' }}
-        >
-          Is the scheduler running? Is the repo up to date?
-        </span>
-      </div>
-    </div>
-  )
-}
-
+// ── Main app ─────────────────────────────────────────────────────────────
 export default function App() {
   const { usage, history, state, now, refresh } = useUsageData()
 
-  if (state === 'loading' && !usage) return <LoadingScreen />
-  if (state === 'error' && !usage) return <ErrorScreen />
-  if (state === 'error' && usage?.error) return <ErrorScreen message={usage.error} />
+  if (state === 'loading' && !usage) return <SkeletonPage />
 
-  // Guaranteed non-null past the guards above
-  const u = usage!
+  const u = usage          // may be non-null even on error (last-known)
+  const isError = state === 'error'
+  const isStale = state === 'stale'
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg-base)',
-        paddingLeft: 48,
-        paddingRight: 48,
-        paddingTop: 28,
-        paddingBottom: 48,
-      }}
-    >
-      {/* Header */}
-      <StatusBar
-        state={state}
-        fetchedAt={u.fetched_at}
-        onRefresh={refresh}
-      />
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg)',
+      padding: '28px 32px 48px',
+      maxWidth: 1400,
+    }}>
+      {/* ── Masthead ──────────────────────────────────────────────────── */}
+      <div className="stagger-in" style={{ animationDelay: '0ms' }}>
+        <StatusBar
+          state={state}
+          fetchedAt={u?.fetched_at ?? null}
+          now={now}
+          onRefresh={refresh}
+        />
+      </div>
+      <div style={{ height: 1, background: 'var(--hairline)', margin: '20px 0 28px' }} />
 
-      {/* Horizontal rule */}
-      <div
-        className="w-full mt-6"
-        style={{ height: 1, background: 'var(--border-faint)' }}
-      />
+      {/* ── Error banner — TELEMETRY OFFLINE ──────────────────────────── */}
+      {isError && (
+        <div
+          className="stagger-in"
+          style={{
+            animationDelay: '30ms',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 20,
+            padding: '8px 14px',
+            borderRadius: 'var(--r-sm)',
+            border: '1px solid var(--sev-crit)',
+            background: 'oklch(0.34 0.07 22 / 0.18)',
+          }}
+        >
+          <svg width={14} height={14} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx={8} cy={8} r={7} stroke="var(--sev-crit)" strokeWidth={1.5} />
+            <line x1={8} y1={4} x2={8} y2={9} stroke="var(--sev-crit)" strokeWidth={1.5} strokeLinecap="round" />
+            <circle cx={8} cy={12} r={1} fill="var(--sev-crit)" />
+          </svg>
+          <span style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--sev-crit)',
+          }}>
+            Telemetry Offline
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            color: 'var(--text-muted)',
+          }}>
+            {u ? '— showing last known values' : '— could not load snapshot'}
+          </span>
+        </div>
+      )}
 
-      {/* Main grid: 3 columns */}
+      {/* ── Gauge row: 5-HOUR | WEEKLY | Rail ─────────────────────────── */}
       <div
-        className="mt-8 grid gap-0"
+        className="stagger-in"
         style={{
-          gridTemplateColumns: '1fr 1fr 340px',
-          gridTemplateRows: 'auto auto',
-          columnGap: 0,
+          animationDelay: '60ms',
+          display: 'grid',
+          gridTemplateColumns: '260px 260px 1fr',
+          gap: 24,
+          alignItems: 'start',
         }}
       >
-        {/* ── 5-HOUR column ── */}
-        <div
-          className="flex flex-col items-center py-8"
-          style={{ borderRight: '1px solid var(--border-faint)' }}
-        >
-          <RingGauge
-            label="5-Hour"
-            utilization={u.five_hour.utilization}
-            size="lg"
-          />
-          <div className="mt-4">
-            <Countdown
-              resetsAt={u.five_hour.resets_at}
-              utilization={u.five_hour.utilization}
-              now={now}
-              label="resets in"
-            />
-          </div>
-        </div>
+        {/* 5-HOUR gauge */}
+        <RingGauge
+          label="5-Hour"
+          utilization={u?.five_hour.utilization ?? null}
+          resetsAt={u?.five_hour.resets_at ?? null}
+          now={now}
+          isError={isError}
+          isStale={isStale}
+        />
 
-        {/* ── WEEKLY column ── */}
-        <div
-          className="flex flex-col items-center py-8"
-          style={{ borderRight: '1px solid var(--border-faint)' }}
-        >
-          <RingGauge
-            label="Weekly"
-            utilization={u.weekly.utilization}
-            size="lg"
-          />
-          <div className="mt-4">
-            <Countdown
-              resetsAt={u.weekly.resets_at}
-              utilization={u.weekly.utilization}
-              now={now}
-              label="resets in"
-            />
-          </div>
-        </div>
+        {/* WEEKLY gauge */}
+        <RingGauge
+          label="Weekly"
+          utilization={u?.weekly.utilization ?? null}
+          resetsAt={u?.weekly.resets_at ?? null}
+          now={now}
+          isError={isError}
+          isStale={isStale}
+        />
 
-        {/* ── Sidebar: models + credit ── */}
+        {/* Right rail — per-model + credit meter */}
         <div
-          className="flex flex-col justify-center px-8 py-8 gap-6"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--hairline)',
+            borderRadius: 'var(--r-md)',
+            boxShadow: 'var(--rim), var(--panel)',
+            padding: 'var(--space-xl)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-xl)',
+          }}
         >
-          {/* Per-model */}
+          {/* Per-model section header */}
           <div>
-            <div
-              className="font-condensed font-semibold tracking-[0.16em] uppercase mb-4"
-              style={{ fontSize: 9, color: 'var(--text-faint)' }}
-            >
+            <div style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 9,
+              fontWeight: 600,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: 'var(--text-dim)',
+              marginBottom: 16,
+            }}>
               Per Model · Weekly
             </div>
-            <div className="flex flex-col gap-4">
-              <ModelRow name="Sonnet" data={u.weekly_sonnet ?? null} now={now} />
-              <ModelRow name="Opus"   data={u.weekly_opus   ?? null} now={now} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <ModelRow
+                name="Sonnet"
+                data={u?.weekly_sonnet ?? null}
+                now={now}
+                isStale={isStale}
+              />
+              <ModelRow
+                name="Opus"
+                data={u?.weekly_opus ?? null}
+                now={now}
+                isStale={isStale}
+              />
             </div>
           </div>
 
-          <div style={{ height: 1, background: 'var(--border-faint)' }} />
+          {/* Divider */}
+          <div style={{ height: 1, background: 'var(--hairline)' }} />
 
           {/* Extra usage credit meter */}
-          <CreditMeter data={u.extra_usage} />
+          {u?.extra_usage && <CreditMeter data={u.extra_usage} />}
         </div>
       </div>
 
-      {/* Sparklines row */}
-      <Divider label="7-Day History" />
-
-      <div className="flex gap-12">
-        <div className="flex-1">
-          <SparkLine
-            data={history}
-            metric="five_hour"
-            width={560}
-            height={72}
-            label="5-Hour utilization"
-          />
-        </div>
+      {/* ── Trend band: 7-day telemetry ───────────────────────────────── */}
+      {history.length > 0 && (
         <div
-          className="w-px self-stretch"
-          style={{ background: 'var(--border-faint)' }}
-        />
-        <div className="flex-1">
-          <SparkLine
-            data={history}
-            metric="weekly"
-            width={560}
-            height={72}
-            label="Weekly utilization"
-          />
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div
-        className="mt-12 flex items-center justify-between"
-        style={{ borderTop: '1px solid var(--border-faint)', paddingTop: 16 }}
-      >
-        <span
-          className="font-condensed"
-          style={{ fontSize: 10, color: 'var(--text-faint)' }}
+          className="stagger-in"
+          style={{
+            animationDelay: '120ms',
+            marginTop: 28,
+            background: 'var(--surface)',
+            border: '1px solid var(--hairline)',
+            borderRadius: 'var(--r-md)',
+            boxShadow: 'var(--rim), var(--panel)',
+            padding: 'var(--space-xl)',
+          }}
         >
+          <div style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 9,
+            fontWeight: 600,
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: 'var(--text-dim)',
+            marginBottom: 16,
+          }}>
+            7-Day Telemetry
+          </div>
+          <SparkLine data={history} />
+        </div>
+      )}
+
+      {/* ── Footer ────────────────────────────────────────────────────── */}
+      <div
+        className="stagger-in"
+        style={{
+          animationDelay: '180ms',
+          marginTop: 32,
+          borderTop: '1px solid var(--hairline)',
+          paddingTop: 14,
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        <span style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 10,
+          color: 'var(--text-dim)',
+        }}>
           Refreshes every 5 min · data committed by scheduler
         </span>
-        <span
-          className="font-condensed"
-          style={{ fontSize: 10, color: 'var(--text-faint)' }}
-        >
+        <span style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 10,
+          color: 'var(--text-dim)',
+        }}>
           claude-pulse
         </span>
       </div>

@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/hanken-grotesk": "^5.2.8",
+    "@fontsource-variable/saira": "^5.2.11",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

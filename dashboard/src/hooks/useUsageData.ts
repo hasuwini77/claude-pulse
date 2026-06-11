@@ -4,11 +4,14 @@ import { minutesSince } from '../utils/format'
 
 const BASE = import.meta.env.BASE_URL
 
-interface UsageStore {
-  usage: UsageData | null
+// Blueprint: fresh within ~20min; stale if older (≈missed cadence)
+const FRESH_MINS = 20
+
+export interface UsageStore {
+  usage:   UsageData | null
   history: HistoryPoint[]
-  state: DataState
-  now: string       // ISO string captured at last load — stable for countdowns
+  state:   DataState
+  now:     string
   refresh: () => void
 }
 
@@ -19,32 +22,27 @@ async function fetchJSON<T>(url: string): Promise<T> {
 }
 
 export function useUsageData(pollMs = 300_000): UsageStore {
-  const [usage, setUsage] = useState<UsageData | null>(null)
+  const [usage,   setUsage]   = useState<UsageData | null>(null)
   const [history, setHistory] = useState<HistoryPoint[]>([])
-  const [state, setState] = useState<DataState>('loading')
-  const [now, setNow] = useState<string>(new Date().toISOString())
+  const [state,   setState]   = useState<DataState>('loading')
+  const [now,     setNow]     = useState(() => new Date().toISOString())
 
   const load = useCallback(async () => {
-    setNow(new Date().toISOString())
+    const ts = new Date().toISOString()
+    setNow(ts)
     try {
       const [u, h] = await Promise.all([
         fetchJSON<UsageData>(`${BASE}data/usage.json`),
-        fetchJSON<HistoryPoint[]>(`${BASE}data/history.json`).catch(() => []),
+        fetchJSON<HistoryPoint[]>(`${BASE}data/history.json`).catch(() => [] as HistoryPoint[]),
       ])
-
-      // If the fetcher wrote an error into the payload
-      if (u.error) {
-        setState('error')
-        setUsage(u)
-        setHistory(h)
-        return
-      }
-
       setUsage(u)
       setHistory(h)
-
-      const mins = minutesSince(u.fetched_at, new Date().toISOString())
-      setState(mins > 30 ? 'stale' : 'fresh')
+      if (u.error) {
+        setState('error')
+        return
+      }
+      const age = minutesSince(u.fetched_at, ts)
+      setState(age <= FRESH_MINS ? 'fresh' : 'stale')
     } catch {
       setState('error')
     }

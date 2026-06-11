@@ -1,78 +1,102 @@
 import type { DataState } from '../types'
-import { formatFetchedAt } from '../utils/format'
+import { relativeTime } from '../utils/format'
 
 interface StatusBarProps {
-  state: DataState
+  state:     DataState
   fetchedAt: string | null
+  now:       string
   onRefresh: () => void
 }
 
-const STATE_META: Record<DataState, { label: string; color: string; pulse: boolean }> = {
-  loading: { label: 'LOADING',  color: 'var(--text-faint)', pulse: true  },
-  fresh:   { label: 'LIVE',     color: 'var(--ok)',         pulse: false },
-  stale:   { label: 'STALE',    color: 'var(--warn)',       pulse: false },
-  error:   { label: 'ERROR',    color: 'var(--crit)',       pulse: false },
+const STATE_META: Record<DataState, {
+  label: string
+  color: string
+  pulse: boolean
+}> = {
+  loading: { label: 'ACQUIRING', color: 'var(--text-dim)',  pulse: true  },
+  fresh:   { label: 'LIVE',      color: 'var(--sev-ok)',   pulse: true  },
+  stale:   { label: 'STALE',     color: 'var(--sev-warn)', pulse: false },
+  error:   { label: 'SIGNAL LOST', color: 'var(--sev-crit)', pulse: false },
 }
 
-export function StatusBar({ state, fetchedAt, onRefresh }: StatusBarProps) {
+export function StatusBar({ state, fetchedAt, now, onRefresh }: StatusBarProps) {
   const meta = STATE_META[state]
+  const age  = fetchedAt && state !== 'loading'
+    ? relativeTime(fetchedAt, now)
+    : null
 
   return (
-    <div className="flex items-center justify-between w-full">
-      {/* Logo / title */}
-      <div className="flex items-center gap-3">
-        {/* Anthropic "A" glyph — simple SVG mark */}
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }}>
+      {/* Wordmark — left-anchored */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Triangle/upward chevron mark */}
+        <svg width={20} height={20} viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path
-            d="M12 3L20.5 20H3.5L12 3Z"
+            d="M10 2.5L17.5 17.5H2.5L10 2.5Z"
             stroke="var(--text-muted)"
-            strokeWidth="1.5"
+            strokeWidth={1.5}
             strokeLinejoin="round"
-            fill="none"
           />
           <path
-            d="M8.5 15L12 8L15.5 15"
+            d="M7 13.5L10 7.5L13 13.5"
             stroke="var(--text-muted)"
-            strokeWidth="1.5"
+            strokeWidth={1.5}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
-        <span
-          className="font-display font-semibold tracking-[0.08em] uppercase"
-          style={{ fontSize: 18, letterSpacing: '0.1em' }}
-        >
-          Claude Pulse
+        <span style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 18,
+          fontWeight: 600,
+          letterSpacing: '0.08em',
+          color: 'var(--text)',
+          textTransform: 'uppercase',
+        }}>
+          Claude·Pulse
         </span>
       </div>
 
-      {/* Status cluster */}
-      <div className="flex items-center gap-4">
-        {fetchedAt && state !== 'loading' && (
-          <span
-            className="font-condensed tabular-nums"
-            style={{ fontSize: 12, color: 'var(--text-faint)' }}
-          >
-            {formatFetchedAt(fetchedAt)}
+      {/* Status cluster — right */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Updated-ago */}
+        {age && (
+          <span style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            color: 'var(--text-dim)',
+            letterSpacing: '0.04em',
+          }}>
+            updated {age}
           </span>
         )}
 
-        {/* State badge */}
-        <div className="flex items-center gap-1.5">
+        {/* State badge: dot + label */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span
             className={meta.pulse ? 'dot-pulse' : ''}
+            aria-hidden="true"
             style={{
               display: 'inline-block',
               width: 6,
               height: 6,
               borderRadius: '50%',
               background: meta.color,
+              flexShrink: 0,
             }}
           />
-          <span
-            className="font-condensed font-semibold tracking-[0.12em]"
-            style={{ fontSize: 10, color: meta.color }}
-          >
+          <span style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: meta.color,
+          }}>
             {meta.label}
           </span>
         </div>
@@ -80,25 +104,24 @@ export function StatusBar({ state, fetchedAt, onRefresh }: StatusBarProps) {
         {/* Refresh button */}
         <button
           onClick={onRefresh}
-          className="cursor-pointer"
-          style={{ background: 'none', border: 'none', padding: 4, color: 'var(--text-faint)' }}
           aria-label="Refresh data"
           title="Refresh"
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 4,
+            color: 'var(--text-dim)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+          }}
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path
-              d="M13.5 2.5A7 7 0 1 0 14.9 8.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <polyline
-              points="15,5 15,2 12,2"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg width={14} height={14} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M13.5 2.5A7 7 0 1 0 14.9 8.5"
+              stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" />
+            <polyline points="15,5 15,2 12,2"
+              stroke="currentColor" strokeWidth={1.5}
+              strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>

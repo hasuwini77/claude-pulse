@@ -23,16 +23,16 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-// --- ANSI helpers ---
-const GREEN  = "\x1b[32m";
-const AMBER  = "\x1b[33m";
-const RED    = "\x1b[31m";
-const DIM    = "\x1b[2m";
-const RESET  = "\x1b[0m";
-// Accent for the window icon + label — the % value keeps its severity color.
-// 5h = normal/default text; wk = light pink (#FF8FC8).
-// (The orchid-purple #C792EA now lives on the git-branch segment in the statusline wrapper.)
-const PINK = "\x1b[38;2;255;143;200m";
+// --- claude-pulse palette (truecolor, tuned for dark terminals, a11y ≥4.5:1) ---
+// Chrome stays neutral slate; saturated color is reserved for the % data
+// (severity) so it reads at a glance instead of shouting. One accent (purple)
+// lives on the git-branch segment, applied in the statusline wrapper.
+const GREEN = "\x1b[38;2;123;208;160m"; // ok   — soft emerald (#7BD0A0)
+const AMBER = "\x1b[38;2;227;179;65m";  // warn — soft amber   (#E3B341)
+const RED   = "\x1b[38;2;235;111;115m"; // crit — soft rose    (#EB6F73)
+const MUTED = "\x1b[38;2;139;150;172m"; // slate — labels, icons, countdown, credits (#8B96AC)
+const DIM   = "\x1b[2m";
+const RESET = "\x1b[0m";
 
 function colorFor(util) {
   if (util === null || util === undefined) return DIM;
@@ -138,20 +138,20 @@ function main() {
   const fh = snapshot.five_hour;
   const fhUtil = fh?.utilization ?? null;
   const fhPct = fmtPct(fhUtil);
-  parts.push(`◔ 5h ${colorize(fhPct, fhUtil)}`);
+  parts.push(`${MUTED}◔ 5h${RESET} ${colorize(fhPct, fhUtil)}`);
 
   // --- Weekly window ---
   const wk = snapshot.weekly;
   const wkUtil = wk?.utilization ?? null;
   const wkPct = fmtPct(wkUtil);
   const wkCountdown = wk?.resets_at ? formatCountdown(wk.resets_at) : null;
-  const wkReset = wkCountdown ? ` ${AMBER}⟳ ${wkCountdown}${RESET}` : "";
-  parts.push(`${PINK}◔ wk${RESET} ${colorize(wkPct, wkUtil)}${wkReset}`);
+  const wkReset = wkCountdown ? ` ${MUTED}⟳ ${wkCountdown}${RESET}` : "";
+  parts.push(`${MUTED}◔ wk${RESET} ${colorize(wkPct, wkUtil)}${wkReset}`);
 
   // --- Extra usage credits ---
   const credits = fmtCredits(snapshot.extra_usage);
   if (credits) {
-    parts.push(`⚡${credits}`);
+    parts.push(`${MUTED}⚡${credits}${RESET}`);
   }
 
   // Stale or error: values shown but clearly flagged as not current

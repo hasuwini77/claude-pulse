@@ -5,8 +5,8 @@
  * Reads data/usage.json (the cached snapshot — never hits the network) and
  * prints ONE compact ANSI-colored line suitable for Claude Code statusLine.command.
  *
- * Output format:  ◔ 5h 25%  ◑ wk 26% ↻2d  ⚡€0/17k
- * Degraded:       ◔ 5h --  ◑ wk --  ⚡ --
+ * Output format:  ◔ 5h 25%  ◔ wk 26% ⟳ 2d  ⚡€0/17k  (countdown in amber)
+ * Degraded:       ◔ 5h --  ◔ wk --  ⚡ --
  *
  * Color thresholds (applied per utilization value):
  *   green  < 60
@@ -118,7 +118,7 @@ function main() {
   if (noData || !snapshot) {
     // Full degrade — no usable data at all
     process.stdout.write(
-      `${DIM}◔ 5h --  ◑ wk --  ⚡ --${RESET}\n`
+      `${DIM}◔ 5h --  ◔ wk --  ⚡ --${RESET}\n`
     );
     return;
   }
@@ -141,8 +141,8 @@ function main() {
   const wkUtil = wk?.utilization ?? null;
   const wkPct = fmtPct(wkUtil);
   const wkCountdown = wk?.resets_at ? formatCountdown(wk.resets_at) : null;
-  const wkReset = wkCountdown ? ` ${DIM}↻${wkCountdown}${RESET}` : "";
-  parts.push(`◑ wk ${colorize(wkPct, wkUtil)}${wkReset}`);
+  const wkReset = wkCountdown ? ` ${AMBER}⟳ ${wkCountdown}${RESET}` : "";
+  parts.push(`◔ wk ${colorize(wkPct, wkUtil)}${wkReset}`);
 
   // --- Extra usage credits ---
   const credits = fmtCredits(snapshot.extra_usage);

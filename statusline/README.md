@@ -3,7 +3,7 @@
 Prints a compact, ANSI-colored Claude usage line to stdout:
 
 ```
-◔ 5h 25%  ◑ wk 26% ↻1d 8h  ⚡€0/17k
+◔ 5h 25%  ◔ wk 26% ⟳ 1d 8h  ⚡€0/17k
 ```
 
 - **◔ 5h** — rolling 5-hour window utilization
@@ -11,7 +11,7 @@ Prints a compact, ANSI-colored Claude usage line to stdout:
 - **⚡** — extra-usage credits used / monthly cap
 
 Color thresholds: green < 60 · amber 60–84 · red ≥ 85.  
-Falls back to `◔ 5h --  ◑ wk --  ⚡ --` (dimmed) when `data/usage.json` is
+Falls back to `◔ 5h --  ◔ wk --  ⚡ --` (dimmed) when `data/usage.json` is
 missing or was fetched more than 30 minutes ago.
 
 ## Prerequisites
@@ -55,7 +55,7 @@ Replace `/absolute/path/to/claude-pulse` with the real path, e.g.:
 
 ```bash
 node /home/you/dev/claude-pulse/statusline/claude-pulse-statusline.js
-# → ◔ 5h 25%  ◑ wk 26% ↻1d 8h  ⚡€0/17k
+# → ◔ 5h 25%  ◔ wk 26% ⟳ 1d 8h  ⚡€0/17k
 ```
 
 If it shows `◔ 5h --`, the `data/usage.json` file is either missing or stale.

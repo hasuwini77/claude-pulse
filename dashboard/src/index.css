@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base:      oklch(0.10 0.008 250);
+  --bg-surface:   oklch(0.14 0.010 250);
+  --bg-elevated:  oklch(0.19 0.012 250);
+  --border:       oklch(0.23 0.012 250);
+  --border-faint: oklch(0.17 0.010 250);
+
+  --text-prime: oklch(0.88 0.010 250);
+  --text-muted: oklch(0.52 0.010 250);
+  --text-faint: oklch(0.34 0.008 250);
+
+  --ok:   oklch(0.71 0.177 145);
+  --warn: oklch(0.78 0.172  75);
+  --crit: oklch(0.65 0.218  25);
+
+  --track: oklch(0.20 0.010 250);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-base);
+  color: var(--text-prime);
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display    { font-family: 'Rajdhani', sans-serif; }
+.font-condensed  { font-family: 'Barlow Condensed', sans-serif; }
+
+/* Ring fill animation */
+@keyframes ring-fill {
+  from { stroke-dashoffset: var(--ring-full); }
+  to   { stroke-dashoffset: var(--ring-offset); }
+}
+.ring-arc { animation: ring-fill 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Sparkline draw */
+@keyframes line-draw {
+  from { stroke-dashoffset: 1000; }
+  to   { stroke-dashoffset: 0; }
+}
+.spark-line { animation: line-draw 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Stale / live pulse */
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.dot-pulse { animation: dot-pulse 2.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-arc  { animation: none; stroke-dashoffset: var(--ring-offset); }
+  .spark-line { animation: none; stroke-dashoffset: 0; }
+  .dot-pulse  { animation: none; }
+}

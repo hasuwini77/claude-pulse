@@ -24,8 +24,32 @@ Token resolution, in order: `~/.claude/.credentials.json` → `claudeAiOauth.acc
   "error": null
 }
 ```
-Nullable: `weekly_sonnet`, `weekly_opus` (and their inner fields). On fetch failure, set
-`error` to a string and preserve the last good window values if available.
+Nullable: `weekly_sonnet`, `weekly_opus` (and their inner fields).
+
+### `fetched_at` semantics — critical for staleness detection
+`fetched_at` records **when the usage data was last successfully fetched and is valid**.
+It is **never bumped on a failed fetch attempt** — doing so would make hours-old data
+appear fresh to consumers checking data age.
+
+On fetch failure the fetcher writes a sanitized error code to `error` and adds a
+separate `last_attempt_at` field (ISO8601 UTC) recording when the attempt was made.
+Last-good window values are preserved so consumers can still show something useful
+while clearly indicating the data is not current.
+
+Error snapshot shape:
+```json
+{
+  "fetched_at": "ISO8601 UTC (last SUCCESSFUL fetch — unchanged)",
+  "last_attempt_at": "ISO8601 UTC (when the failed attempt happened)",
+  "error": "http-401",
+  "five_hour":  { "utilization": 25.0, "resets_at": "ISO8601 UTC" },
+  ...
+}
+```
+
+**Consumer rule:** treat data as stale when `fetched_at` is older than your threshold
+(e.g. 30 min for statusline). Also check `error != null` as an independent signal.
+Display a stale/error indicator in either case — do not silently render last-good values.
 
 ## `data/history.json` (append-only, capped to last 7 days)
 ```json

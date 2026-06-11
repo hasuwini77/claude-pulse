@@ -41,11 +41,11 @@ function writeError(
   uPath: string,
   publicCode: string,
   detail: string,
-  fetchedAt: string
+  lastAttemptAt: string
 ): void {
   process.stderr.write(`claude-pulse: ${detail}\n`);
   const lastGood = readJsonFile<UsageSnapshot>(uPath);
-  atomicWriteJson(uPath, errorSnapshot(publicCode, fetchedAt, lastGood));
+  atomicWriteJson(uPath, errorSnapshot(publicCode, lastAttemptAt, lastGood));
 }
 
 export interface FetchResult {

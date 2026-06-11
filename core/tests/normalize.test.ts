@@ -85,27 +85,52 @@ describe("normalizeUsage", () => {
   });
 });
 
+const ATTEMPT_AT = "2026-06-11T12:00:00.000Z"; // simulates a later failed-attempt time
+
 describe("errorSnapshot", () => {
-  it("sets error to the provided message", () => {
-    const snap = errorSnapshot("Network timeout", FETCHED_AT);
-    expect(snap.error).toBe("Network timeout");
+  it("sets error to the provided code", () => {
+    const snap = errorSnapshot("network-error", ATTEMPT_AT);
+    expect(snap.error).toBe("network-error");
+  });
+
+  it("sets last_attempt_at to the attempt timestamp", () => {
+    const snap = errorSnapshot("network-error", ATTEMPT_AT);
+    expect(snap.last_attempt_at).toBe(ATTEMPT_AT);
   });
 
   it("all windows are null when no lastGood provided", () => {
-    const snap = errorSnapshot("fail", FETCHED_AT);
+    const snap = errorSnapshot("fail", ATTEMPT_AT);
     expect(snap.five_hour.utilization).toBeNull();
     expect(snap.weekly.utilization).toBeNull();
     expect(snap.weekly_sonnet.utilization).toBeNull();
     expect(snap.weekly_opus.utilization).toBeNull();
   });
 
+  it("uses attempt time as fetched_at when there is no prior data", () => {
+    const snap = errorSnapshot("token-unresolved", ATTEMPT_AT);
+    // No lastGood — best available timestamp is the attempt itself
+    expect(snap.fetched_at).toBe(ATTEMPT_AT);
+  });
+
   it("preserves last-good window values when provided", () => {
     const lastGood = normalizeUsage(FIXTURE_RAW, FETCHED_AT);
-    const snap = errorSnapshot("401 Unauthorized", "2026-06-11T12:00:00.000Z", lastGood);
-    expect(snap.error).toBe("401 Unauthorized");
+    const snap = errorSnapshot("http-401", ATTEMPT_AT, lastGood);
+    expect(snap.error).toBe("http-401");
     expect(snap.five_hour.utilization).toBe(25.0);
     expect(snap.weekly.utilization).toBe(26.0);
-    // fetched_at updated to the new timestamp
-    expect(snap.fetched_at).toBe("2026-06-11T12:00:00.000Z");
+  });
+
+  it("preserves last-good fetched_at — does NOT bump it to the attempt time", () => {
+    const lastGood = normalizeUsage(FIXTURE_RAW, FETCHED_AT);
+    const snap = errorSnapshot("http-401", ATTEMPT_AT, lastGood);
+    // fetched_at must reflect when the DATA was valid, not when the failed attempt happened
+    expect(snap.fetched_at).toBe(FETCHED_AT);
+    expect(snap.last_attempt_at).toBe(ATTEMPT_AT);
+  });
+
+  it("normalizeUsage (success path) has no last_attempt_at", () => {
+    const snap = normalizeUsage(FIXTURE_RAW, FETCHED_AT);
+    expect(snap.last_attempt_at).toBeUndefined();
+    expect(snap.error).toBeNull();
   });
 });

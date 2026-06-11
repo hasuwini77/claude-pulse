@@ -3,6 +3,9 @@
  *
  * SECURITY: token is read once, used for the single HTTP request, then discarded.
  * It is NEVER logged, written to disk, or returned from this module.
+ *
+ * Error hygiene: short sanitized codes go into committed usage.json ("token-unresolved",
+ * "network-error", "http-401", "http-NNN"). Full diagnostic messages go to stderr only.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -13,17 +16,14 @@ import { resolveToken } from "./token.js";
 import { atomicWriteJson } from "./write.js";
 
 const USAGE_ENDPOINT = "https://api.anthropic.com/api/oauth/usage";
-
-function dataDir(repoRoot: string): string {
-  return resolve(repoRoot, "data");
-}
+const FETCH_TIMEOUT_MS = 10_000;
 
 function usagePath(repoRoot: string): string {
-  return resolve(dataDir(repoRoot), "usage.json");
+  return resolve(repoRoot, "data", "usage.json");
 }
 
 function historyPath(repoRoot: string): string {
-  return resolve(dataDir(repoRoot), "history.json");
+  return resolve(repoRoot, "data", "history.json");
 }
 
 function readJsonFile<T>(filePath: string): T | null {
@@ -36,9 +36,22 @@ function readJsonFile<T>(filePath: string): T | null {
   }
 }
 
+/** Write short sanitized code to usage.json; full detail to stderr. */
+function writeError(
+  uPath: string,
+  publicCode: string,
+  detail: string,
+  fetchedAt: string
+): void {
+  process.stderr.write(`claude-pulse: ${detail}\n`);
+  const lastGood = readJsonFile<UsageSnapshot>(uPath);
+  atomicWriteJson(uPath, errorSnapshot(publicCode, fetchedAt, lastGood));
+}
+
 export interface FetchResult {
   success: boolean;
-  errorMessage?: string;
+  /** Short sanitized error code (safe for public repo). Present on failure. */
+  errorCode?: string;
 }
 
 /**
@@ -51,16 +64,17 @@ export async function fetchAndWrite(repoRoot: string): Promise<FetchResult> {
   const hPath = historyPath(repoRoot);
   const fetchedAt = new Date().toISOString();
 
+  // --- 1. Resolve token ---
   let token: string;
   try {
     token = resolveToken();
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const lastGood = readJsonFile<UsageSnapshot>(uPath);
-    atomicWriteJson(uPath, errorSnapshot(msg, fetchedAt, lastGood));
-    return { success: false, errorMessage: msg };
+    const detail = err instanceof Error ? err.message : String(err);
+    writeError(uPath, "token-unresolved", detail, fetchedAt);
+    return { success: false, errorCode: "token-unresolved" };
   }
 
+  // --- 2. Fetch endpoint ---
   let raw: RawUsageResponse;
   try {
     const resp = await fetch(USAGE_ENDPOINT, {
@@ -70,36 +84,41 @@ export async function fetchAndWrite(repoRoot: string): Promise<FetchResult> {
         "anthropic-beta": "oauth-2025-04-20",
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
     if (resp.status === 401) {
-      const msg = "Authentication failed (401) — OAuth token may be expired. Re-sign in to Claude Code.";
-      const lastGood = readJsonFile<UsageSnapshot>(uPath);
-      atomicWriteJson(uPath, errorSnapshot(msg, fetchedAt, lastGood));
-      return { success: false, errorMessage: msg };
+      writeError(
+        uPath,
+        "http-401",
+        "Authentication failed (401) — OAuth token may be expired. Re-sign in to Claude Code.",
+        fetchedAt
+      );
+      return { success: false, errorCode: "http-401" };
     }
 
     if (!resp.ok) {
-      const msg = `HTTP ${resp.status} from usage endpoint`;
-      const lastGood = readJsonFile<UsageSnapshot>(uPath);
-      atomicWriteJson(uPath, errorSnapshot(msg, fetchedAt, lastGood));
-      return { success: false, errorMessage: msg };
+      const code = `http-${resp.status}`;
+      writeError(uPath, code, `HTTP ${resp.status} from usage endpoint`, fetchedAt);
+      return { success: false, errorCode: code };
     }
 
     raw = (await resp.json()) as RawUsageResponse;
   } catch (err) {
-    const msg = `Network error: ${err instanceof Error ? err.message : String(err)}`;
-    const lastGood = readJsonFile<UsageSnapshot>(uPath);
-    atomicWriteJson(uPath, errorSnapshot(msg, fetchedAt, lastGood));
-    return { success: false, errorMessage: msg };
+    const isTimeout =
+      err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+    const code = isTimeout ? "timeout" : "network-error";
+    const detail = isTimeout
+      ? `Request timed out after ${FETCH_TIMEOUT_MS / 1000}s`
+      : `Network error: ${err instanceof Error ? err.message : String(err)}`;
+    writeError(uPath, code, detail, fetchedAt);
+    return { success: false, errorCode: code };
   }
 
+  // --- 3. Normalize and write ---
   const snapshot = normalizeUsage(raw, fetchedAt);
-
-  // Write usage.json atomically
   atomicWriteJson(uPath, snapshot);
 
-  // Append to history.json and cap to 7 days
   const existingHistory = readJsonFile<HistoryPoint[]>(hPath) ?? [];
   const updatedHistory = appendHistory(existingHistory, snapshot);
   atomicWriteJson(hPath, updatedHistory);

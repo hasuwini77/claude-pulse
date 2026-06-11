@@ -38,7 +38,7 @@ async function main(): Promise<void> {
       process.stdout.write("claude-pulse: fetch OK\n");
       process.exit(0);
     } else {
-      process.stderr.write(`claude-pulse: fetch failed — ${result.errorMessage ?? "unknown error"}\n`);
+      process.stderr.write(`claude-pulse: fetch failed [${result.errorCode ?? "unknown"}] — see above for details\n`);
       process.exit(1);
     }
   } else {

@@ -39,16 +39,25 @@ if ((Test-Path $LogFile) -and ((Get-Content $LogFile).Count -gt $MaxLines)) {
 
 Write-Log "=== claude-pulse fetch ==="
 
+# 0. Branch guard — only commit/push on main
+$currentBranch = git symbolic-ref --short HEAD 2>&1
+if ($LASTEXITCODE -ne 0) { $currentBranch = 'detached' }
+if ($currentBranch -ne 'main') {
+    Write-Log "SKIP: not on main branch (currently '$currentBranch') — aborting"
+    exit 0
+}
+
 # 1. Fetch & write data/
 $CoreCli = Join-Path $RepoRoot "core\dist\cli.js"
 if (Test-Path $CoreCli) {
     node $CoreCli fetch
-    if ($LASTEXITCODE -ne 0) { Write-Log "fetch: FAILED (exit $LASTEXITCODE)"; exit 1 }
-    Write-Log "fetch: OK"
+    # Non-zero exit: core writes an error snapshot to data/ — continue so the dashboard shows the outage
+    if ($LASTEXITCODE -ne 0) { Write-Log "fetch: FAILED (exit $LASTEXITCODE) — committing error snapshot" }
+    else { Write-Log "fetch: OK" }
 } elseif (Get-Command claude-pulse -ErrorAction SilentlyContinue) {
     claude-pulse fetch
-    if ($LASTEXITCODE -ne 0) { Write-Log "fetch (global cli): FAILED (exit $LASTEXITCODE)"; exit 1 }
-    Write-Log "fetch (global cli): OK"
+    if ($LASTEXITCODE -ne 0) { Write-Log "fetch (global cli): FAILED (exit $LASTEXITCODE) — committing error snapshot" }
+    else { Write-Log "fetch (global cli): OK" }
 } else {
     Write-Log "ERROR: cannot find core\dist\cli.js or claude-pulse in PATH"
     exit 1
@@ -70,7 +79,13 @@ if (-not $staged) {
     Write-Log "committed: $sha"
 }
 
-# 4. Push
+# 4. Pull --rebase to avoid divergence, then push
+git pull --rebase --autostash
+if ($LASTEXITCODE -ne 0) {
+    Write-Log "pull --rebase FAILED — aborting push (resolve conflicts manually then run again)"
+    exit 1
+}
+Write-Log "pulled (rebased)"
 git push
 if ($LASTEXITCODE -ne 0) { Write-Log "push FAILED (check remote auth — exit $LASTEXITCODE)"; exit 1 }
 Write-Log "pushed OK"

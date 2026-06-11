@@ -29,8 +29,9 @@ const AMBER  = "\x1b[33m";
 const RED    = "\x1b[31m";
 const DIM    = "\x1b[2m";
 const RESET  = "\x1b[0m";
-// Accent for the window icon + label (◔ 5h / ◔ wk) — light orchid-purple.
-// Truecolor (#C792EA); the % value keeps its severity color (green/amber/red).
+// Accent for the window icon + label — the % value keeps its severity color.
+// Truecolor: 5h = light pink (#FF8FC8), wk = light orchid-purple (#C792EA).
+const PINK   = "\x1b[38;2;255;143;200m";
 const ACCENT = "\x1b[38;2;199;146;234m";
 
 function colorFor(util) {
@@ -137,7 +138,7 @@ function main() {
   const fh = snapshot.five_hour;
   const fhUtil = fh?.utilization ?? null;
   const fhPct = fmtPct(fhUtil);
-  parts.push(`${ACCENT}◔ 5h${RESET} ${colorize(fhPct, fhUtil)}`);
+  parts.push(`${PINK}◔ 5h${RESET} ${colorize(fhPct, fhUtil)}`);
 
   // --- Weekly window ---
   const wk = snapshot.weekly;

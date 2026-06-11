@@ -1,0 +1,76 @@
+name: Deploy dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Allow manual re-deploy from the Actions tab
+  workflow_dispatch:
+
+# Grant the GITHUB_TOKEN permission to write to Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one concurrent deployment; skip in-progress runs (but not cancel them)
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Vite app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: dashboard
+        run: npm ci
+
+      - name: Build
+        working-directory: dashboard
+        run: npm run build
+        # vite.config.ts sets base: '/claude-pulse/' and the copyDataPlugin
+        # copies data/ into dist/data/ — no extra step needed.
+
+      - name: Verify data files are present
+        run: |
+          test -f dashboard/dist/data/usage.json   || { echo "usage.json missing from dist"; exit 1; }
+          test -f dashboard/dist/data/history.json || { echo "history.json missing from dist"; exit 1; }
+          echo "data/ files verified in dist/"
+
+      - name: Security — assert no secrets in bundle
+        run: |
+          if grep -r "sk-ant-\|Bearer \|accessToken\|api\.anthropic\.com" dashboard/dist/assets/ 2>/dev/null; then
+            echo "FAIL: secret pattern found in bundle"
+            exit 1
+          fi
+          echo "security check passed — no secrets in bundle"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dashboard/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -26,7 +26,18 @@ export interface ExtraUsage {
 }
 
 export interface UsageSnapshot {
+  /**
+   * ISO8601 UTC — when the data was last SUCCESSFULLY fetched and is valid.
+   * NOT bumped on failed attempts; consumers use this to detect staleness.
+   * Falls back to the attempt time only when there is no prior successful fetch.
+   */
   fetched_at: string;
+  /**
+   * ISO8601 UTC — when the last fetch attempt was made.
+   * Present only when `error` is non-null (failed fetch).
+   * Omitted on success (redundant with fetched_at).
+   */
+  last_attempt_at?: string;
   five_hour: UsageWindow;
   weekly: UsageWindow;
   weekly_sonnet: UsageWindow;
@@ -94,28 +105,36 @@ export function normalizeUsage(
 }
 
 /**
- * Build an error snapshot, preserving last-good window values if available.
+ * Build an error snapshot preserving last-good window values and — critically —
+ * preserving the last-good `fetched_at` so consumers can detect staleness correctly.
+ *
+ * @param errorCode      Short sanitized code written to the committed file.
+ * @param lastAttemptAt  ISO8601 UTC — when this failed attempt was made.
+ * @param lastGood       Previous successful snapshot (if any).
  */
 export function errorSnapshot(
-  errorMessage: string,
-  fetchedAt: string,
+  errorCode: string,
+  lastAttemptAt: string,
   lastGood?: UsageSnapshot | null
 ): UsageSnapshot {
   if (lastGood) {
     return {
       ...lastGood,
-      fetched_at: fetchedAt,
-      error: errorMessage,
+      // fetched_at stays as-is (last valid fetch time) — do NOT bump to now
+      last_attempt_at: lastAttemptAt,
+      error: errorCode,
     };
   }
+  // No prior successful fetch — use attempt time as best available timestamp
   const nullWindow: UsageWindow = { utilization: null, resets_at: null };
   return {
-    fetched_at: fetchedAt,
+    fetched_at: lastAttemptAt,
+    last_attempt_at: lastAttemptAt,
     five_hour: nullWindow,
     weekly: nullWindow,
     weekly_sonnet: nullWindow,
     weekly_opus: nullWindow,
     extra_usage: { enabled: false, monthly_limit: 0, used_credits: 0, currency: "EUR" },
-    error: errorMessage,
+    error: errorCode,
   };
 }

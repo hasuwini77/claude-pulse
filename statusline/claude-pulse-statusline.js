@@ -102,35 +102,31 @@ function main() {
   const dataPath = resolveDataPath();
 
   let snapshot = null;
-  let degraded = false;
+  let noData = false; // true only when file is completely absent or unreadable
 
   if (!fs.existsSync(dataPath)) {
-    degraded = true;
+    noData = true;
   } else {
     try {
       const raw = fs.readFileSync(dataPath, "utf8");
       snapshot = JSON.parse(raw);
     } catch {
-      degraded = true;
+      noData = true;
     }
   }
 
-  if (!degraded && isStale(snapshot?.fetched_at)) {
-    degraded = true;
-  }
-
-  // snapshot.error != null means the last fetch failed but last-good values are
-  // preserved. fetched_at is bumped on every failed attempt, so the stale check
-  // alone can't detect a prolonged failure. Track it separately to show a marker.
-  const hasError = !degraded && snapshot?.error != null;
-
-  if (degraded || !snapshot) {
-    // Full degrade — no data at all
+  if (noData || !snapshot) {
+    // Full degrade — no usable data at all
     process.stdout.write(
       `${DIM}◔ 5h --  ◑ wk --  ⚡ --${RESET}\n`
     );
     return;
   }
+
+  // Show a red ! when data is stale (fetched_at age > 30 min) OR fetch failed.
+  // With core now preserving fetched_at on error, isStale() correctly catches
+  // both a stopped scheduler and a prolonged fetch failure.
+  const showWarning = isStale(snapshot.fetched_at) || snapshot.error != null;
 
   const parts = [];
 
@@ -154,10 +150,10 @@ function main() {
     parts.push(`⚡${credits}`);
   }
 
-  // Red ! when last fetch failed — values are last-good, not current
-  const errorMarker = hasError ? `  ${RED}!${RESET}` : "";
+  // Stale or error: values shown but clearly flagged as not current
+  const warningMarker = showWarning ? `  ${RED}!${RESET}` : "";
 
-  process.stdout.write(parts.join("  ") + errorMarker + "\n");
+  process.stdout.write(parts.join("  ") + warningMarker + "\n");
 }
 
 main();

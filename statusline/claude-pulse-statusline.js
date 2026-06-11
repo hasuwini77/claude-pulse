@@ -119,8 +119,10 @@ function main() {
     degraded = true;
   }
 
-  // If the snapshot itself has an error field, still show what we have
-  // but the error values are preserved (last-good) — don't force degraded.
+  // snapshot.error != null means the last fetch failed but last-good values are
+  // preserved. fetched_at is bumped on every failed attempt, so the stale check
+  // alone can't detect a prolonged failure. Track it separately to show a marker.
+  const hasError = !degraded && snapshot?.error != null;
 
   if (degraded || !snapshot) {
     // Full degrade — no data at all
@@ -152,7 +154,10 @@ function main() {
     parts.push(`⚡${credits}`);
   }
 
-  process.stdout.write(parts.join("  ") + "\n");
+  // Red ! when last fetch failed — values are last-good, not current
+  const errorMarker = hasError ? `  ${RED}!${RESET}` : "";
+
+  process.stdout.write(parts.join("  ") + errorMarker + "\n");
 }
 
 main();

@@ -1,0 +1,36 @@
+{
+  "name": "claude-pulse-core",
+  "version": "0.1.0",
+  "description": "Claude usage fetcher — reads OAuth token, calls usage endpoint, writes data/usage.json + data/history.json",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "claude-pulse": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern=tests/",
+    "fetch": "node dist/cli.js fetch"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5",
+    "typescript": "^5.4.5"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [".ts"],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": ["ts-jest", {
+        "useESM": true,
+        "tsconfig": "./tsconfig.test.json"
+      }]
+    }
+  }
+}

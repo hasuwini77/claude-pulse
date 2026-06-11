@@ -24,11 +24,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 // --- ANSI helpers ---
-const GREEN = "\x1b[32m";
-const AMBER = "\x1b[33m";
-const RED   = "\x1b[31m";
-const DIM   = "\x1b[2m";
-const RESET = "\x1b[0m";
+const GREEN  = "\x1b[32m";
+const AMBER  = "\x1b[33m";
+const RED    = "\x1b[31m";
+const DIM    = "\x1b[2m";
+const RESET  = "\x1b[0m";
+// Accent for the window icon + label (◔ 5h / ◔ wk) — light orchid-purple.
+// Truecolor (#C792EA); the % value keeps its severity color (green/amber/red).
+const ACCENT = "\x1b[38;2;199;146;234m";
 
 function colorFor(util) {
   if (util === null || util === undefined) return DIM;
@@ -134,7 +137,7 @@ function main() {
   const fh = snapshot.five_hour;
   const fhUtil = fh?.utilization ?? null;
   const fhPct = fmtPct(fhUtil);
-  parts.push(`◔ 5h ${colorize(fhPct, fhUtil)}`);
+  parts.push(`${ACCENT}◔ 5h${RESET} ${colorize(fhPct, fhUtil)}`);
 
   // --- Weekly window ---
   const wk = snapshot.weekly;
@@ -142,7 +145,7 @@ function main() {
   const wkPct = fmtPct(wkUtil);
   const wkCountdown = wk?.resets_at ? formatCountdown(wk.resets_at) : null;
   const wkReset = wkCountdown ? ` ${AMBER}⟳ ${wkCountdown}${RESET}` : "";
-  parts.push(`◔ wk ${colorize(wkPct, wkUtil)}${wkReset}`);
+  parts.push(`${ACCENT}◔ wk${RESET} ${colorize(wkPct, wkUtil)}${wkReset}`);
 
   // --- Extra usage credits ---
   const credits = fmtCredits(snapshot.extra_usage);

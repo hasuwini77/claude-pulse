@@ -117,7 +117,17 @@ export function RingGauge({ label, utilization, resetsAt, now, isError, isStale 
         aria-hidden="true"
         style={{ transform: 'rotate(-135deg)' }}
       >
-        {/* Ghosted redline zone tracks */}
+        {/* Baseline track — dim full-sweep ring so low % values still read as a gauge */}
+        <circle
+          cx={100} cy={100} r={R}
+          fill="none"
+          stroke="var(--surface-raised)"
+          strokeWidth={12}
+          strokeLinecap="butt"
+          style={dashFor(0, 100) as CSSProperties}
+        />
+
+        {/* Zone tracks — ok / warn / crit bands over baseline */}
         {ZONES.map(([a, b, c]) => (
           <circle
             key={a}

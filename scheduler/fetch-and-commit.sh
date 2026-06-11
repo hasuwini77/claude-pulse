@@ -20,6 +20,13 @@ fi
 
 log "=== claude-pulse fetch ==="
 
+# ── 0. Branch guard — only commit/push from main ──────────────────────────
+CURRENT_BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null || echo 'detached')"
+if [ "$CURRENT_BRANCH" != "main" ]; then
+  log "SKIP: not on main branch (currently on '$CURRENT_BRANCH') — aborting to avoid committing on wrong branch"
+  exit 0
+fi
+
 # ── 1. Fetch & write data/ ─────────────────────────────────────────────────
 if [ -f "core/dist/cli.js" ]; then
   node "core/dist/cli.js" fetch && log "fetch: OK" || log "fetch: FAILED (non-zero exit)"
@@ -42,5 +49,10 @@ else
   log "committed: $(git rev-parse --short HEAD)"
 fi
 
-# ── 4. Push ────────────────────────────────────────────────────────────────
+# ── 4. Pull --rebase to avoid divergence, then push ───────────────────────
+if ! git pull --rebase --autostash; then
+  log "pull --rebase FAILED — aborting push (resolve conflicts manually then run again)"
+  exit 1
+fi
+log "pulled (rebased)"
 git push && log "pushed OK" || log "push FAILED (check remote auth)"

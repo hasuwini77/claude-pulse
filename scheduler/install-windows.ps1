@@ -43,9 +43,11 @@ Write-Log "=== claude-pulse fetch ==="
 $CoreCli = Join-Path $RepoRoot "core\dist\cli.js"
 if (Test-Path $CoreCli) {
     node $CoreCli fetch
+    if ($LASTEXITCODE -ne 0) { Write-Log "fetch: FAILED (exit $LASTEXITCODE)"; exit 1 }
     Write-Log "fetch: OK"
 } elseif (Get-Command claude-pulse -ErrorAction SilentlyContinue) {
     claude-pulse fetch
+    if ($LASTEXITCODE -ne 0) { Write-Log "fetch (global cli): FAILED (exit $LASTEXITCODE)"; exit 1 }
     Write-Log "fetch (global cli): OK"
 } else {
     Write-Log "ERROR: cannot find core\dist\cli.js or claude-pulse in PATH"
@@ -53,7 +55,8 @@ if (Test-Path $CoreCli) {
 }
 
 # 2. Stage ONLY data\ — never secrets
-git add data\
+git add "data\"
+if ($LASTEXITCODE -ne 0) { Write-Log "git add FAILED (exit $LASTEXITCODE)"; exit 1 }
 
 # 3. Commit if changed
 $staged = git diff --cached --name-only
@@ -62,12 +65,14 @@ if (-not $staged) {
 } else {
     $ts = (Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')
     git commit -m "chore: update usage snapshot $ts" --no-verify
+    if ($LASTEXITCODE -ne 0) { Write-Log "git commit FAILED (exit $LASTEXITCODE)"; exit 1 }
     $sha = git rev-parse --short HEAD
     Write-Log "committed: $sha"
 }
 
 # 4. Push
 git push
+if ($LASTEXITCODE -ne 0) { Write-Log "push FAILED (check remote auth — exit $LASTEXITCODE)"; exit 1 }
 Write-Log "pushed OK"
 '@ | Set-Content -Path $ScriptPath -Encoding UTF8
     Write-Host "Created $ScriptPath"

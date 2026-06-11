@@ -22,8 +22,8 @@ export interface UsageData {
 
 export interface HistoryPoint {
   t: string
-  five_hour: number
-  weekly: number
+  five_hour: number | null   // core may write null for windows with no data
+  weekly:    number | null
 }
 
 export type Severity = 'ok' | 'warn' | 'crit'

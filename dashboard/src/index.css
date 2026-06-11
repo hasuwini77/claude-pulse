@@ -11,17 +11,17 @@
   /* Text */
   --text:            oklch(0.95 0.008 255);
   --text-muted:      oklch(0.70 0.014 255);
-  --text-dim:        oklch(0.54 0.014 255);
+  --text-dim:        oklch(0.66 0.014 255);  /* 5.52:1 on --bg — passes WCAG AA */
 
   /* Severity (only saturated colors on page) */
   --sev-ok:   oklch(0.80 0.15 158);
   --sev-warn: oklch(0.81 0.14  80);
   --sev-crit: oklch(0.66 0.20  22);
 
-  /* Zone tracks (ghosted) */
-  --zone-ok:   oklch(0.34 0.05 158);
-  --zone-warn: oklch(0.35 0.05  80);
-  --zone-crit: oklch(0.34 0.07  22);
+  /* Zone tracks — raised enough to read as gauge track on --surface */
+  --zone-ok:   oklch(0.43 0.06 158);
+  --zone-warn: oklch(0.43 0.06  80);
+  --zone-crit: oklch(0.43 0.08  22);
 
   /* Accent — ice/steel (credit meter + focus ring only) */
   --accent: oklch(0.74 0.09 232);

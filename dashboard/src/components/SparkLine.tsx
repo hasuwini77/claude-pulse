@@ -18,12 +18,18 @@ const THRESHOLD = [
 
 function toSVGPoints(data: HistoryPoint[], key: 'five_hour' | 'weekly', W: number, H: number) {
   if (data.length === 0) return []
-  return data.map((d, i) => ({
-    x: PAD.l + (i / Math.max(1, data.length - 1)) * W,
-    y: PAD.t + H - ((d[key] - MIN_Y) / (MAX_Y - MIN_Y)) * H,
-    v: d[key],
-    t: d.t,
-  }))
+  const total = data.length
+  return data.reduce<Array<{ x: number; y: number; v: number; t: string }>>((acc, d, i) => {
+    const v = d[key]
+    if (v == null) return acc   // skip null windows — don't NaN the polyline
+    acc.push({
+      x: PAD.l + (i / Math.max(1, total - 1)) * W,
+      y: PAD.t + H - ((v - MIN_Y) / (MAX_Y - MIN_Y)) * H,
+      v,
+      t: d.t,
+    })
+    return acc
+  }, [])
 }
 
 function pts2poly(points: Array<{ x: number; y: number }>) {
@@ -52,9 +58,9 @@ export function SparkLine({ data, width = 900, height = 88 }: SparkLineProps) {
   const wkPts   = toSVGPoints(data, 'weekly',    W, H)
   const fhPts   = toSVGPoints(data, 'five_hour', W, H)
 
-  // Color last-value severity for each series
-  const wkSev  = severity(wkPts.length ? data[data.length - 1].weekly    : null)
-  const fhSev  = severity(fhPts.length ? data[data.length - 1].five_hour : null)
+  // Color last valid-value severity for each series (skip nulls via filtered pts)
+  const wkSev  = severity(wkPts.length ? wkPts[wkPts.length - 1].v : null)
+  const fhSev  = severity(fhPts.length ? fhPts[fhPts.length - 1].v : null)
   const wkColor = sevColor(wkSev)
   const fhColor = sevColor(fhSev)
 
@@ -244,7 +250,7 @@ export function SparkLine({ data, width = 900, height = 88 }: SparkLineProps) {
               color: fhColor,
               fontVariantNumeric: 'tabular-nums',
             }}>
-              5H {Math.round(tooltip.pt.five_hour)}%
+              5H {tooltip.pt.five_hour != null ? `${Math.round(tooltip.pt.five_hour)}%` : '—'}
             </span>
             <span style={{
               fontFamily: 'var(--font-display)',
@@ -253,7 +259,7 @@ export function SparkLine({ data, width = 900, height = 88 }: SparkLineProps) {
               color: wkColor,
               fontVariantNumeric: 'tabular-nums',
             }}>
-              WK {Math.round(tooltip.pt.weekly)}%
+              WK {tooltip.pt.weekly != null ? `${Math.round(tooltip.pt.weekly)}%` : '—'}
             </span>
           </div>
         </div>

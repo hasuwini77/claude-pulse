@@ -49,16 +49,17 @@ export function StatusBar({ state, fetchedAt, now, onRefresh }: StatusBarProps) 
             strokeLinejoin="round"
           />
         </svg>
-        <span style={{
+        <h1 style={{
           fontFamily: 'var(--font-display)',
           fontSize: 18,
           fontWeight: 600,
           letterSpacing: '0.08em',
           color: 'var(--text)',
           textTransform: 'uppercase',
+          margin: 0,
         }}>
           Claude·Pulse
-        </span>
+        </h1>
       </div>
 
       {/* Status cluster — right */}
@@ -110,7 +111,7 @@ export function StatusBar({ state, fetchedAt, now, onRefresh }: StatusBarProps) 
             background: 'none',
             border: 'none',
             padding: 4,
-            color: 'var(--text-dim)',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',

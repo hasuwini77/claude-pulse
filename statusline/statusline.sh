@@ -8,8 +8,8 @@
 #     "command": "bash /home/hasuwini77/dev/claude-pulse/statusline/statusline.sh" }
 #
 # Palette — Catppuccin Mocha (truecolor): colorful but tonally unified.
-#   model → cyan 137;220;235   ctx → yellow 249;226;175
-#   branch → sapphire 116;199;236  worktree → teal 148;226;213
+#   model → green 67;160;71    ctx → yellow 249;226;175
+#   branch → cyan 137;220;235   worktree → teal 148;226;213
 #
 # ccstatusline emits the Tango ANSI for its named colors; we remap each to the
 # palette. If ccstatusline's config colors change, update or drop the matching
@@ -21,9 +21,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SESSION_JSON="$(cat)"   # Claude Code pipes the session JSON on stdin — consume once.
 
 ccs="$(printf '%s' "$SESSION_JSON" | npx -y ccstatusline@latest 2>/dev/null | sed -E \
-  -e 's/38;2;138;226;52/38;2;137;220;235/g'  \
+  -e 's/38;2;138;226;52/38;2;67;160;71/g'    \
   -e 's/38;2;252;233;79/38;2;249;226;175/g'  \
-  -e 's/38;2;173;127;168/38;2;116;199;236/g' \
+  -e 's/38;2;173;127;168/38;2;137;220;235/g' \
   -e 's/38;2;6;152;154/38;2;148;226;213/g')"
 
 usage="$(node "$SCRIPT_DIR/claude-pulse-statusline.js" 2>/dev/null)"

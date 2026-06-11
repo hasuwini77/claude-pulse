@@ -76,6 +76,7 @@ export function RingGaugeSkeleton() {
 // ── Main gauge ───────────────────────────────────────────────────────────
 interface RingGaugeProps {
   label:      string
+  labelColor?: string
   utilization: number | null
   resetsAt:   string | null
   now:        string
@@ -83,7 +84,7 @@ interface RingGaugeProps {
   isStale?:   boolean
 }
 
-export function RingGauge({ label, utilization, resetsAt, now, isError, isStale }: RingGaugeProps) {
+export function RingGauge({ label, labelColor = 'var(--text-muted)', utilization, resetsAt, now, isError, isStale }: RingGaugeProps) {
   const util = utilization ?? 0
   const sev  = severity(utilization)
   const fill = sevColor(sev)
@@ -187,7 +188,7 @@ export function RingGauge({ label, utilization, resetsAt, now, isError, isStale 
             fontSize: 11,
             letterSpacing: '0.10em',
             fontWeight: 500,
-            color: 'var(--text-muted)',
+            color: labelColor,
           }}
         >
           {label}

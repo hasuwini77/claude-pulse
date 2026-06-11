@@ -23,14 +23,18 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-// --- claude-pulse palette (truecolor, tuned for dark terminals, a11y ≥4.5:1) ---
-// Chrome stays neutral slate; saturated color is reserved for the % data
-// (severity) so it reads at a glance instead of shouting. One accent (purple)
-// lives on the git-branch segment, applied in the statusline wrapper.
-const GREEN = "\x1b[38;2;123;208;160m"; // ok   — soft emerald (#7BD0A0)
-const AMBER = "\x1b[38;2;227;179;65m";  // warn — soft amber   (#E3B341)
-const RED   = "\x1b[38;2;235;111;115m"; // crit — soft rose    (#EB6F73)
-const MUTED = "\x1b[38;2;139;150;172m"; // slate — labels, icons, countdown, credits (#8B96AC)
+// --- claude-pulse palette — Catppuccin Mocha (truecolor) ---
+// Colorful but tonally unified (every hue shares ~the same L/C), so it reads
+// rich and lively without the clashing-rainbow effect. a11y: all ≥4.5:1 on dark.
+// Severity (% values):
+const GREEN = "\x1b[38;2;166;227;161m"; // ok   — green   (#a6e3a1)
+const AMBER = "\x1b[38;2;249;226;175m"; // warn — yellow  (#f9e2af)
+const RED   = "\x1b[38;2;243;139;168m"; // crit — red     (#f38ba8)
+// Segment label/icon hues:
+const PINK  = "\x1b[38;2;245;194;231m"; // 5h label/icon  (#f5c2e7)
+const LAV   = "\x1b[38;2;180;190;254m"; // wk label/icon  (#b4befe)
+const PEACH = "\x1b[38;2;250;179;135m"; // credits        (#fab387)
+const MUTED = "\x1b[38;2;147;153;178m"; // countdown / secondary (#9399b2)
 const DIM   = "\x1b[2m";
 const RESET = "\x1b[0m";
 
@@ -138,7 +142,7 @@ function main() {
   const fh = snapshot.five_hour;
   const fhUtil = fh?.utilization ?? null;
   const fhPct = fmtPct(fhUtil);
-  parts.push(`${MUTED}◔ 5h${RESET} ${colorize(fhPct, fhUtil)}`);
+  parts.push(`${PINK}◔ 5h${RESET} ${colorize(fhPct, fhUtil)}`);
 
   // --- Weekly window ---
   const wk = snapshot.weekly;
@@ -146,12 +150,12 @@ function main() {
   const wkPct = fmtPct(wkUtil);
   const wkCountdown = wk?.resets_at ? formatCountdown(wk.resets_at) : null;
   const wkReset = wkCountdown ? ` ${MUTED}⟳ ${wkCountdown}${RESET}` : "";
-  parts.push(`${MUTED}◔ wk${RESET} ${colorize(wkPct, wkUtil)}${wkReset}`);
+  parts.push(`${LAV}◔ wk${RESET} ${colorize(wkPct, wkUtil)}${wkReset}`);
 
   // --- Extra usage credits ---
   const credits = fmtCredits(snapshot.extra_usage);
   if (credits) {
-    parts.push(`${MUTED}⚡${credits}${RESET}`);
+    parts.push(`${PEACH}⚡${credits}${RESET}`);
   }
 
   // Stale or error: values shown but clearly flagged as not current

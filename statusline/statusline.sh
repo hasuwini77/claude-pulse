@@ -7,14 +7,13 @@
 #   "statusLine": { "type": "command",
 #     "command": "bash /home/hasuwini77/dev/claude-pulse/statusline/statusline.sh" }
 #
-# Palette (truecolor, tuned for dark terminals):
-#   primary text  221;227;236 (#DDE3EC)   accent purple 185;141;224 (#B98DE0)
-#   muted slate   139;150;172 (#8B96AC)    severity lives in the usage segment
+# Palette — Catppuccin Mocha (truecolor): colorful but tonally unified.
+#   model → blue 89;180;250    ctx → sky 137;220;235
+#   branch → mauve 203;166;247  worktree → teal 148;226;213
 #
 # ccstatusline emits the Tango ANSI for its named colors; we remap each to the
-# palette (model→primary, ctx/worktree→muted, branch→accent). If ccstatusline's
-# config colors change, update or drop the matching sed line — it degrades
-# gracefully (an unmapped color just renders as ccstatusline's default).
+# palette. If ccstatusline's config colors change, update or drop the matching
+# sed line — it degrades gracefully (an unmapped color renders as the default).
 
 set -euo pipefail
 
@@ -22,10 +21,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SESSION_JSON="$(cat)"   # Claude Code pipes the session JSON on stdin — consume once.
 
 ccs="$(printf '%s' "$SESSION_JSON" | npx -y ccstatusline@latest 2>/dev/null | sed -E \
-  -e 's/38;2;138;226;52/38;2;221;227;236/g'  \
-  -e 's/38;2;252;233;79/38;2;139;150;172/g'  \
-  -e 's/38;2;173;127;168/38;2;185;141;224/g' \
-  -e 's/38;2;6;152;154/38;2;139;150;172/g')"
+  -e 's/38;2;138;226;52/38;2;89;180;250/g'   \
+  -e 's/38;2;252;233;79/38;2;137;220;235/g'  \
+  -e 's/38;2;173;127;168/38;2;203;166;247/g' \
+  -e 's/38;2;6;152;154/38;2;148;226;213/g')"
 
 usage="$(node "$SCRIPT_DIR/claude-pulse-statusline.js" 2>/dev/null)"
 

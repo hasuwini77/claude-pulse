@@ -130,6 +130,7 @@ export default function App() {
           {/* 5-HOUR gauge */}
           <RingGauge
             label="5-Hour"
+            labelColor="var(--win-5h)"
             utilization={u?.five_hour.utilization ?? null}
             resetsAt={u?.five_hour.resets_at ?? null}
             now={now}
@@ -140,6 +141,7 @@ export default function App() {
           {/* WEEKLY gauge */}
           <RingGauge
             label="Weekly"
+            labelColor="var(--win-wk)"
             utilization={u?.weekly.utilization ?? null}
             resetsAt={u?.weekly.resets_at ?? null}
             now={now}

@@ -2,6 +2,9 @@
 
 ## 2026-06-11
 
+### Statusline palette tweak
+Model segment darkened to a richer green (`46;125;50`, Material green 800) for more presence; the branch segment took over the previous model green (`67;160;71`) instead of blue. Both the palette comment and the sed remap in `statusline/statusline.sh` updated together. Repo made public so the team can clone and self-install (each user's own token resolves at runtime — only the code is shared).
+
 ### Built: live Claude usage HUD (v0 — shipped)
 A cross-platform tool that surfaces your Claude subscription usage in three places, built by an agentille `feature-team` (5 teammates).
 

@@ -20,8 +20,9 @@ GIT_DIR="$(dirname "$GIT_BIN")"
 
 CRON_PATH="$NODE_DIR:$GIT_DIR:/usr/local/bin:/usr/bin:/bin"
 
-# The cron line: */15 * * * * = every 15 minutes
-CRON_LINE="*/15 * * * * PATH=$CRON_PATH HOME=$HOME $FETCH_SCRIPT >> $REPO_ROOT/scheduler/cron.log 2>&1 $CRON_TAG"
+# The cron line: */15 * * * * = every 15 minutes.
+# Invoke via bash explicitly — don't rely on the execute bit or shebang.
+CRON_LINE="*/15 * * * * PATH=$CRON_PATH HOME=$HOME bash $FETCH_SCRIPT >> $REPO_ROOT/scheduler/cron.log 2>&1 $CRON_TAG"
 
 # Remove existing claude-pulse entry, then append the new one
 (
@@ -37,3 +38,19 @@ echo "To verify: crontab -l | grep claude-pulse"
 echo ""
 echo "To uninstall:"
 echo "  crontab -l | grep -v '${CRON_TAG}' | crontab -"
+
+# ── WSL check — cron is not running by default in WSL ───────────────────────
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  if ! pgrep -x cron >/dev/null 2>&1 && ! pgrep -x crond >/dev/null 2>&1; then
+    echo ""
+    echo "⚠️  WSL detected and the cron service is NOT running — the entry"
+    echo "   above will never fire. Either start cron now and on each boot:"
+    echo "     sudo service cron start"
+    echo "   or enable systemd in /etc/wsl.conf ([boot] systemd=true), or use"
+    echo "   the native Windows scheduler instead: scheduler/install-windows.ps1"
+  fi
+  echo ""
+  echo "Note: cron only runs while the WSL VM is alive (a WSL terminal open"
+  echo "or Windows configured to keep it running). For a sealed setup, prefer"
+  echo "scheduler/install-windows.ps1 (Windows Task Scheduler)."
+fi

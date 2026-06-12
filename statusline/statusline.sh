@@ -5,7 +5,7 @@
 # whole line is one cohesive, calm, accessible scheme, then appends the usage
 # segment. Wire into ~/.claude/settings.json:
 #   "statusLine": { "type": "command",
-#     "command": "bash /home/hasuwini77/dev/claude-pulse/statusline/statusline.sh" }
+#     "command": "bash /abs/path/to/claude-pulse/statusline/statusline.sh" }
 #
 # Palette — Catppuccin Mocha (truecolor): colorful but tonally unified.
 #   model → green 46;125;50    ctx → yellow 249;226;175

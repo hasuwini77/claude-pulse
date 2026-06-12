@@ -30,11 +30,15 @@ cat > "$PLIST_PATH" <<XML
   <key>Label</key>
   <string>${PLIST_ID}</string>
 
+  <!-- The login shell wrapper picks up PATH; the script itself is bash
+       (it uses BASH_SOURCE), so exec bash explicitly — zsh ignores the
+       shebang when handed a script path. -->
   <key>ProgramArguments</key>
   <array>
     <string>${SHELL_BIN}</string>
     <string>-l</string>
-    <string>${FETCH_SCRIPT}</string>
+    <string>-c</string>
+    <string>exec bash "${FETCH_SCRIPT}"</string>
   </array>
 
   <key>WorkingDirectory</key>

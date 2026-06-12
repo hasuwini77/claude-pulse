@@ -15,7 +15,9 @@ if (!target || !oursPath || !theirsPath) {
   process.exit(2);
 }
 
-const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
+// Strip a UTF-8 BOM if present — PowerShell redirects love adding one.
+const readJson = (p) =>
+  JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, ''));
 
 let merged;
 try {

@@ -61,6 +61,35 @@ To publish your own live dashboard (not required for the statusline/CLI):
    scheduler pushes a fresh `data/usage.json` every ~15 min, so your dashboard stays live at
    `https://<you>.github.io/claude-pulse/`.
 
+## Running on multiple machines
+
+Supported out of the box. Each machine runs its own scheduler against the same repo; the
+fetch script is **self-healing**:
+
+- It syncs with the remote *before* taking a snapshot, auto-resolves conflicts in `data/`
+  (history entries from all machines are kept; the freshest snapshot wins), and retries a
+  rejected push after re-syncing.
+- A run interrupted mid-rebase (crash, shutdown) is recovered automatically on the next run.
+- Conflicts in files **outside** `data/` are never auto-resolved — the script backs off,
+  logs, and leaves your work intact for manual resolution.
+
+## Troubleshooting
+
+**macOS: scheduler exits 127, log says `can't open input file`** — the repo is in a
+privacy-protected folder (`~/Documents`, `~/Desktop`, `~/Downloads`) which launchd can't
+read. Grant your shell Full Disk Access: System Settings → Privacy & Security → Full Disk
+Access → `+` → `Cmd+Shift+G` → `/bin/zsh` → toggle on. Or move the repo (e.g. `~/dev/`)
+and re-run the installer. Verify with `launchctl list | grep claude-pulse` (second column
+`0` = success).
+
+**WSL: cron entry never fires** — the cron service isn't running by default in WSL
+(`sudo service cron start`, or enable systemd in `/etc/wsl.conf`). Cron also only runs
+while the WSL VM is alive — for a setup that survives reboots unattended, use the native
+Windows scheduler: `scheduler/install-windows.ps1`.
+
+**Scheduler stopped committing** — check `scheduler/fetch.log` (or `cron.log` /
+`launchd-stderr.log`). The script logs every recovery and skip with the reason.
+
 ## Theme
 Both the statusline and the dashboard use one **Catppuccin Mocha** palette so they read as a
 single product. Each color is a single token — retune in `statusline/claude-pulse-statusline.js`,

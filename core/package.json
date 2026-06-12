@@ -1,6 +1,6 @@
 {
   "name": "claude-pulse-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Claude usage fetcher — reads OAuth token, calls usage endpoint, writes data/usage.json + data/history.json",
   "type": "module",
   "main": "dist/index.js",

@@ -80,3 +80,26 @@ echo "  Runs   : every 15 minutes (also at login)"
 echo ""
 echo "To uninstall:"
 echo "  launchctl unload '$PLIST_PATH' && rm '$PLIST_PATH'"
+
+# ── macOS privacy (TCC) check ────────────────────────────────────────────────
+# launchd-spawned processes cannot read ~/Documents, ~/Desktop, or ~/Downloads
+# without an explicit Full Disk Access grant. Symptom: the agent exits 127 and
+# launchd-stderr.log shows "can't open input file".
+case "$REPO_ROOT" in
+  "$HOME/Documents/"*|"$HOME/Desktop/"*|"$HOME/Downloads/"*)
+    echo ""
+    echo "⚠️  This repo lives in a macOS privacy-protected folder."
+    echo "   The scheduler will fail (exit 127) until you grant the shell"
+    echo "   Full Disk Access:"
+    echo ""
+    echo "   System Settings → Privacy & Security → Full Disk Access"
+    echo "   → '+' → press Cmd+Shift+G → type ${SHELL_BIN} → add it → toggle ON"
+    echo ""
+    echo "   Alternatively, move the repo outside ~/Documents (e.g. ~/dev/)"
+    echo "   and re-run this installer."
+    echo ""
+    echo "   Verify afterwards with:"
+    echo "     launchctl kickstart -k gui/\$(id -u)/${PLIST_ID}"
+    echo "     launchctl list | grep ${PLIST_ID}   # second column 0 = success"
+    ;;
+esac

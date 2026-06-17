@@ -1,16 +1,16 @@
 {
-  "fetched_at": "2026-06-17T13:00:04.379Z",
+  "fetched_at": "2026-06-17T13:03:20.148Z",
   "five_hour": {
-    "utilization": 34,
-    "resets_at": "2026-06-17T15:20:00.850347+00:00"
+    "utilization": 35,
+    "resets_at": "2026-06-17T15:20:00.521883+00:00"
   },
   "weekly": {
     "utilization": 77,
-    "resets_at": "2026-06-19T18:00:00.850367+00:00"
+    "resets_at": "2026-06-19T18:00:00.521908+00:00"
   },
   "weekly_sonnet": {
     "utilization": 54,
-    "resets_at": "2026-06-19T18:00:00.850375+00:00"
+    "resets_at": "2026-06-19T18:00:00.521919+00:00"
   },
   "weekly_opus": {
     "utilization": null,

@@ -1,5 +1,10 @@
 # claude-pulse — Progress
 
+## 2026-06-23
+
+### Statusline: thinking-effort segment
+Added a live reasoning-effort indicator to the statusline. It reads `effort.level` from the session JSON Claude Code pipes to `statusline/statusline.sh` (values `low`/`medium`/`high`/`xhigh`/`max`; the field is absent on models that don't support reasoning effort) and appends `Thinking <Level>` in mauve purple (`#cba6f7`, in-palette) to the end of line 1, right after the Ctx Used segment. Tracks mid-session `/effort` changes and degrades cleanly (segment omitted) when no effort level is reported.
+
 ## 2026-06-11
 
 ### Statusline palette tweak

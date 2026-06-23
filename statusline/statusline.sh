@@ -28,4 +28,17 @@ ccs="$(printf '%s' "$SESSION_JSON" | npx -y ccstatusline@latest 2>/dev/null | se
 
 usage="$(node "$SCRIPT_DIR/claude-pulse-statusline.js" 2>/dev/null)"
 
+# Thinking-effort segment — read effort.level from the session JSON (absent on
+# models without reasoning effort). Mauve (#cba6f7) — purple, in-palette.
+# Appended to the END of line 1 (right after the Ctx Used segment).
+effort="$(printf '%s' "$SESSION_JSON" \
+  | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{const l=JSON.parse(d)?.effort?.level;if(l)process.stdout.write(l);}catch{}})' 2>/dev/null)"
+
+if [ -n "$effort" ]; then
+  MAUVE=$'\033[38;2;203;166;247m'; RST=$'\033[0m'
+  Level="$(printf '%s' "${effort:0:1}" | tr '[:lower:]' '[:upper:]')${effort:1}"
+  seg="  ${MAUVE}Thinking ${Level}${RST}"
+  ccs="$(printf '%s' "$ccs" | awk -v e="$seg" 'NR==1{printf "%s%s\n",$0,e;next}{print}')"
+fi
+
 printf '%s  %s\n' "$ccs" "$usage"

@@ -15,12 +15,22 @@
 # palette. If ccstatusline's config colors change, update or drop the matching
 # sed line — it degrades gracefully (an unmapped color renders as the default).
 
-set -euo pipefail
+# NB: deliberately NOT `set -e`/`pipefail`. The statusline must ALWAYS print a
+# line — if any one segment (ccstatusline, node, the usage CLI) fails or is
+# offline, we degrade that segment and still emit the rest. A hard-exit here
+# blanks the entire statusline (which is exactly the "no statusline on new
+# tabs" bug this guards against).
+set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SESSION_JSON="$(cat)"   # Claude Code pipes the session JSON on stdin — consume once.
 
-ccs="$(printf '%s' "$SESSION_JSON" | npx -y ccstatusline@latest 2>/dev/null | sed -E \
+# Pin the version: `@latest` forces an npm-registry round-trip on EVERY render,
+# which hangs/fails on a cold or offline tab and blanks the line. A pinned
+# version resolves straight from the npx cache — fast and offline-safe.
+CCSTATUSLINE_VERSION="2.2.22"
+
+ccs="$(printf '%s' "$SESSION_JSON" | npx -y "ccstatusline@${CCSTATUSLINE_VERSION}" 2>/dev/null | sed -E \
   -e 's/38;2;138;226;52/38;2;46;125;50/g'    \
   -e 's/38;2;252;233;79/38;2;249;226;175/g'  \
   -e 's/38;2;173;127;168/38;2;67;160;71/g'   \

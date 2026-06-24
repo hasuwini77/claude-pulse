@@ -43,11 +43,18 @@ if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ]; then
   log "recovered: aborted stale merge left by a previous run"
 fi
 
-# ── 1. Branch guard — only commit/push from main ───────────────────────────
+# ── 1. Branch detection — gate git writes, NOT the local refresh ───────────
+# The statusline reads data/usage.json directly, so it MUST be refreshed every
+# run regardless of the current branch. Only the remote sync + commit + push
+# are gated to `main` — that's what keeps snapshots off feature branches.
+# (Previously the whole run aborted off-main, silently freezing the statusline
+# for the entire duration of any feature branch.)
 CURRENT_BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null || echo 'detached')"
-if [ "$CURRENT_BRANCH" != "main" ]; then
-  log "SKIP: not on main branch (currently on '$CURRENT_BRANCH') — aborting to avoid committing on wrong branch"
-  exit 0
+if [ "$CURRENT_BRANCH" = "main" ]; then
+  ON_MAIN=true
+else
+  ON_MAIN=false
+  log "off-main ('$CURRENT_BRANCH'): will refresh local data/ only — skipping sync/commit/push"
 fi
 
 # ── 2. Conflict resolution helpers ─────────────────────────────────────────
@@ -114,10 +121,13 @@ sync_with_remote() {
 }
 
 # ── 3. Sync BEFORE fetching new data — minimizes the conflict window ───────
-if sync_with_remote; then
-  log "synced with remote"
-else
-  log "WARN: sync failed (offline or unresolvable conflict) — continuing with local state"
+# Only on main: a rebase-pull on a feature branch would rewrite the user's work.
+if [ "$ON_MAIN" = true ]; then
+  if sync_with_remote; then
+    log "synced with remote"
+  else
+    log "WARN: sync failed (offline or unresolvable conflict) — continuing with local state"
+  fi
 fi
 
 # Guard: a corrupt history.json would crash the fetch CLI on every run.
@@ -134,6 +144,14 @@ elif command -v claude-pulse &>/dev/null; then
 else
   log "ERROR: cannot find core/dist/cli.js or claude-pulse in PATH — skipping fetch"
   exit 1
+fi
+
+# ── 5–7. Commit & push — main only. Off-main we stop here: data/ is already
+# refreshed locally (which is all the statusline needs), and we never want a
+# usage-snapshot commit landing on a feature branch.
+if [ "$ON_MAIN" != true ]; then
+  log "off-main: local data/ refreshed — done (no commit/push)"
+  exit 0
 fi
 
 # ── 5. Stage explicit allowlist only — mirrors vite copyDataPlugin whitelist

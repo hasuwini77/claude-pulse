@@ -22,6 +22,6 @@
     "used_credits": 0,
     "currency": "EUR"
   },
-  "error": "http-401",
-  "last_attempt_at": "2026-06-24T22:30:02.333Z"
+  "error": "http-429",
+  "last_attempt_at": "2026-06-24T22:45:01.782Z"
 }

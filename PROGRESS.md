@@ -1,5 +1,15 @@
 # claude-pulse — Progress
 
+## 2026-06-24
+
+### Fix: statusline froze off-main + blanked on new tabs
+Two independent bugs surfaced together (statusline showing a stale weekly 18% when the real figure was 44%, and disappearing entirely on freshly opened terminal tabs).
+
+- **Frozen usage off-main.** `scheduler/fetch-and-commit.sh` aborted the *entire* run — including the local data fetch — whenever the repo wasn't on `main`. Sitting on a feature branch (`feat/statusline-effort`) for ~26h meant `data/usage.json` never refreshed, so the statusline read 26-hour-old numbers. Fix: the branch check no longer aborts; the fetch refreshes `data/usage.json` on every run regardless of branch (the statusline reads that file directly), and only the remote sync + commit + push stay gated to `main` so snapshots still never land on a feature branch.
+- **Blank statusline on new tabs.** `statusline/statusline.sh` ran under `set -euo pipefail` and invoked `npx -y ccstatusline@latest`. The `@latest` tag forces an npm-registry round-trip on every render; on a cold or offline tab that hangs/fails, and `set -e` then aborted the script before it printed anything. Fix: dropped `set -e`/`pipefail` (each segment degrades independently and the line always prints) and pinned `ccstatusline@2.2.22` so it resolves straight from the npx cache — fast and offline-safe.
+
+Both changes are in the shared `.sh` scripts, so they cover Linux/WSL and macOS; no GNU-only or `timeout`-dependent constructs were used.
+
 ## 2026-06-23
 
 ### Statusline: thinking-effort segment

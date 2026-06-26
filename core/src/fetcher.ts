@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { appendHistory, type HistoryPoint } from "./history.js";
 import { errorSnapshot, normalizeUsage, type RawUsageResponse, type UsageSnapshot } from "./normalize.js";
-import { resolveToken } from "./token.js";
+import { getFreshAccessToken, refreshAndPersist } from "./refresh.js";
 import { atomicWriteJson } from "./write.js";
 
 const USAGE_ENDPOINT = "https://api.anthropic.com/api/oauth/usage";
@@ -64,28 +64,38 @@ export async function fetchAndWrite(repoRoot: string): Promise<FetchResult> {
   const hPath = historyPath(repoRoot);
   const fetchedAt = new Date().toISOString();
 
-  // --- 1. Resolve token ---
+  // --- 1. Resolve token (proactively refreshes if expired/near-expiry) ---
   let token: string;
   try {
-    token = resolveToken();
+    token = await getFreshAccessToken();
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     writeError(uPath, "token-unresolved", detail, fetchedAt);
     return { success: false, errorCode: "token-unresolved" };
   }
 
-  // --- 2. Fetch endpoint ---
-  let raw: RawUsageResponse;
-  try {
-    const resp = await fetch(USAGE_ENDPOINT, {
+  const requestUsage = (bearer: string): Promise<Response> =>
+    fetch(USAGE_ENDPOINT, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${bearer}`,
         "anthropic-beta": "oauth-2025-04-20",
         "Content-Type": "application/json",
       },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
+
+  // --- 2. Fetch endpoint (one forced refresh-and-retry on 401) ---
+  let raw: RawUsageResponse;
+  try {
+    let resp = await requestUsage(token);
+
+    // A 401 despite the proactive refresh means the cached expiry was wrong
+    // (clock skew, server-side revocation). Force one refresh and retry.
+    if (resp.status === 401) {
+      const refreshed = await refreshAndPersist();
+      if (refreshed) resp = await requestUsage(refreshed);
+    }
 
     if (resp.status === 401) {
       writeError(

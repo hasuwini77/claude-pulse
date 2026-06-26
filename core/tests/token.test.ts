@@ -15,14 +15,16 @@ const mockExecSync = jest.fn<() => Buffer>();
 jest.unstable_mockModule("node:fs", () => ({
   existsSync: mockExistsSync,
   readFileSync: mockReadFileSync,
-  // Other fs functions used in write.ts — no-ops here; token.ts doesn't need them
+  // Other fs functions used by token.ts write-back — no-ops here.
   mkdirSync: jest.fn(),
   renameSync: jest.fn(),
   writeFileSync: jest.fn(),
+  chmodSync: jest.fn(),
 }));
 
 jest.unstable_mockModule("node:child_process", () => ({
   execSync: mockExecSync,
+  execFileSync: jest.fn(),
 }));
 
 // Dynamic import AFTER mock registration

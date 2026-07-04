@@ -1,12 +1,12 @@
 {
-  "fetched_at": "2026-07-03T03:35:58.686Z",
+  "fetched_at": "2026-07-04T09:06:44.270Z",
   "five_hour": {
     "utilization": 0,
     "resets_at": null
   },
   "weekly": {
-    "utilization": 38,
-    "resets_at": "2026-07-03T18:00:00.037126+00:00"
+    "utilization": 0,
+    "resets_at": null
   },
   "weekly_sonnet": {
     "utilization": null,
@@ -22,6 +22,5 @@
     "used_credits": 0,
     "currency": "EUR"
   },
-  "error": "network-error",
-  "last_attempt_at": "2026-07-03T17:52:08.981Z"
+  "error": null
 }

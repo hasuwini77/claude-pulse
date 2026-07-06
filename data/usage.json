@@ -22,5 +22,6 @@
     "used_credits": 0,
     "currency": "EUR"
   },
-  "error": null
+  "error": "http-503",
+  "last_attempt_at": "2026-07-06T19:08:50.376Z"
 }

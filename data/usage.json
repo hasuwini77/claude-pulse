@@ -1,8 +1,8 @@
 {
-  "fetched_at": "2026-07-10T19:39:59.709Z",
+  "fetched_at": "2026-07-10T19:55:04.108Z",
   "five_hour": {
     "utilization": 6,
-    "resets_at": "2026-07-10T20:00:00.062128+00:00"
+    "resets_at": "2026-07-10T19:59:59.510268+00:00"
   },
   "weekly": {
     "utilization": 0,

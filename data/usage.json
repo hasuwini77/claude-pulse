@@ -1,12 +1,12 @@
 {
-  "fetched_at": "2026-07-19T08:00:00.484Z",
+  "fetched_at": "2026-07-19T08:15:05.600Z",
   "five_hour": {
     "utilization": 0,
     "resets_at": null
   },
   "weekly": {
     "utilization": 5,
-    "resets_at": "2026-07-24T17:59:59.867921+00:00"
+    "resets_at": "2026-07-24T17:59:59.982711+00:00"
   },
   "weekly_sonnet": {
     "utilization": null,

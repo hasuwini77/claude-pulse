@@ -22,6 +22,6 @@
     "used_credits": 0,
     "currency": "EUR"
   },
-  "error": "http-429",
-  "last_attempt_at": "2026-07-22T06:09:51.290Z"
+  "error": "token-unresolved",
+  "last_attempt_at": "2026-07-22T06:24:56.008Z"
 }

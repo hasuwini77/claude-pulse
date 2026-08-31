@@ -1,5 +1,16 @@
 # claude-pulse — Progress
 
+## 2026-08-31
+
+### Fix: WezTerm "Font problem" popup — worktree glyph in no installed font
+Launching WezTerm raised a modal: *"No fonts contain glyphs for these codepoints: \u{16830}. Placeholder glyphs are being displayed instead."*
+
+- **Cause.** `ccstatusline` 2.2.22 prints U+16830 (Bamum Supplement) as the default symbol for its `git-worktree` widget, so the statusline emitted `⎇ main | 𖠰 main`. Nothing installed on the machine covers that block — not Fira Code, not JetBrains Mono NL Nerd Font, not Segoe UI Symbol or Segoe UI Emoji — so it rendered as tofu and WezTerm popped its missing-glyph warning on every launch.
+- **Fix.** `ccstatusline` supports a per-item `character` override (`formatSymbolPrefix` reads `item.character` before falling back to the widget default), so `statusline/ccstatusline.settings.json` now sets `"character": "⌂"` on the `git-worktree` item. `⌂` (U+2302 HOUSE) was picked by checking cmap coverage across every installed font: Fira Code, JetBrains Mono NL Nerd Font and Segoe UI Symbol all have it, and Fira Code is the primary font in both WezTerm and Windows Terminal, so it resolves in the primary font with no fallback hop.
+- No terminal config was touched — silencing WezTerm's `warn_about_missing_glyphs` would have hidden the symptom while leaving a tofu box sitting in the statusline.
+
+The same `character` key has to be mirrored into `~/.config/ccstatusline/settings.json`, which is the file ccstatusline actually reads; the repo copy is the tracked reference.
+
 ## 2026-06-24
 
 ### Fix: statusline froze off-main + blanked on new tabs

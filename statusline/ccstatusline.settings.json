@@ -9,7 +9,7 @@
     [
       { "id": "git-branch", "type": "git-branch", "color": "brightMagenta" },
       { "id": "sep-2", "type": "separator" },
-      { "id": "git-worktree", "type": "git-worktree", "color": "cyan" }
+      { "id": "git-worktree", "type": "git-worktree", "color": "cyan", "character": "⌂" }
     ],
     []
   ],

@@ -41,11 +41,27 @@ if [ -n "$_nvm_bin" ] && [ -x "$_nvm_bin/node" ]; then
 fi
 
 # Pin the version: `@latest` forces an npm-registry round-trip on EVERY render,
-# which hangs/fails on a cold or offline tab and blanks the line. A pinned
-# version resolves straight from the npx cache — fast and offline-safe.
+# which hangs/fails on a cold or offline tab and blanks the line.
 CCSTATUSLINE_VERSION="2.2.22"
 
-ccs="$(printf '%s' "$SESSION_JSON" | "$NPX_BIN" -y "ccstatusline@${CCSTATUSLINE_VERSION}" 2>/dev/null | sed -E \
+# HOT PATH. `npx ccstatusline` re-bootstraps the whole npm CLI on EVERY render —
+# ~800ms of CPU per statusline paint, times every open session. Measured at
+# 26% CPU with four concurrent `npm exec` processes. Resolve the globally
+# installed dist and hand it straight to node instead: one process, no npm.
+# Install/refresh with:  npm i -g ccstatusline@2.2.22
+CCS_JS=""
+for _c in "$HOME"/.nvm/versions/node/*/lib/node_modules/ccstatusline/dist/ccstatusline.js; do
+  [ -f "$_c" ] && CCS_JS="$_c"
+done
+
+if [ -n "$CCS_JS" ]; then
+  ccs_raw="$(printf '%s' "$SESSION_JSON" | "$NODE_BIN" "$CCS_JS" 2>/dev/null)"
+else
+  # Fallback only — slow. Means the global install is missing; reinstall it.
+  ccs_raw="$(printf '%s' "$SESSION_JSON" | "$NPX_BIN" -y "ccstatusline@${CCSTATUSLINE_VERSION}" 2>/dev/null)"
+fi
+
+ccs="$(printf '%s' "$ccs_raw" | sed -E \
   -e 's/38;2;138;226;52/38;2;46;125;50/g'    \
   -e 's/38;2;252;233;79/38;2;249;226;175/g'  \
   -e 's/38;2;173;127;168/38;2;67;160;71/g'   \

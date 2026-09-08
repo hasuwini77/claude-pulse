@@ -27,6 +27,12 @@ your config silently. The steps are:
    ```json
    "statusLine": { "type": "command", "command": "bash /abs/path/to/claude-pulse/statusline/statusline.sh" }
    ```
+   Install `ccstatusline` globally — the statusline calls its binary directly.
+   Without it the script falls back to `npx`, which re-bootstraps the npm CLI on
+   **every render** (~800ms of CPU per paint, times every open Claude session):
+   ```bash
+   npm i -g ccstatusline@2.2.22
+   ```
    For the exact colors, also copy the bundled ccstatusline config:
    ```bash
    mkdir -p ~/.config/ccstatusline

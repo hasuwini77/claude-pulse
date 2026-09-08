@@ -43,6 +43,10 @@ cat <<EOF
      "command": "bash $ROOT/statusline/statusline.sh"
    }
 
+   Install ccstatusline globally (the statusline calls its binary directly; without
+   it the script falls back to npx and re-bootstraps npm on every render):
+     npm i -g ccstatusline@2.2.22
+
    (Optional, for the exact statusline colors) copy the bundled ccstatusline config:
      mkdir -p ~/.config/ccstatusline
      cp "$ROOT/statusline/ccstatusline.settings.json" ~/.config/ccstatusline/settings.json

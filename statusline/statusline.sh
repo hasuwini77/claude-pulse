@@ -49,6 +49,11 @@ CCSTATUSLINE_VERSION="2.2.22"
 # 26% CPU with four concurrent `npm exec` processes. Resolve the globally
 # installed dist and hand it straight to node instead: one process, no npm.
 # Install/refresh with:  npm i -g ccstatusline@2.2.22
+# V8 compile cache (Node >=22). ccstatusline is a large bundled ESM; caching its
+# compilation shaves module-load time off every render. Node invalidates the
+# cache itself on version/content change, so it never needs clearing.
+export NODE_COMPILE_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/claude-pulse-nodecache"
+
 CCS_JS=""
 for _c in "$HOME"/.nvm/versions/node/*/lib/node_modules/ccstatusline/dist/ccstatusline.js; do
   [ -f "$_c" ] && CCS_JS="$_c"

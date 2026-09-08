@@ -72,8 +72,17 @@ usage="$("$NODE_BIN" "$SCRIPT_DIR/claude-pulse-statusline.js" 2>/dev/null)"
 # Thinking-effort segment — read effort.level from the session JSON (absent on
 # models without reasoning effort). Mauve (#cba6f7) — purple, in-palette.
 # Appended to the END of line 1 (right after the Ctx Used segment).
-effort="$(printf '%s' "$SESSION_JSON" \
-  | "$NODE_BIN" -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{const l=JSON.parse(d)?.effort?.level;if(l)process.stdout.write(l);}catch{}})' 2>/dev/null)"
+# Parsed with bash parameter expansion, not a node one-liner: spawning node
+# purely to pluck one string cost ~40ms of CPU on every render. Zero
+# subprocesses here. Degrades to empty (segment omitted) on any shape mismatch.
+effort=""
+_ef="${SESSION_JSON#*\"effort\"}"
+if [ "$_ef" != "$SESSION_JSON" ]; then
+  _ef="${_ef#*\"level\"}"   # -> : "high", ...
+  _ef="${_ef#*\"}"           # -> high", ...
+  _ef="${_ef%%\"*}"          # -> high
+  case "$_ef" in ([a-z]*) [ "${#_ef}" -le 12 ] && effort="$_ef" ;; esac
+fi
 
 if [ -n "$effort" ]; then
   MAUVE=$'\033[38;2;203;166;247m'; RST=$'\033[0m'

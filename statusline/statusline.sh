@@ -55,7 +55,11 @@ CCSTATUSLINE_VERSION="2.2.22"
 export NODE_COMPILE_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/claude-pulse-nodecache"
 
 CCS_JS=""
-for _c in "$HOME"/.nvm/versions/node/*/lib/node_modules/ccstatusline/dist/ccstatusline.js; do
+# Search every global prefix without spawning `npm root -g` (that is a node
+# process by itself): nvm on the Windows/nvm box, Homebrew + /usr/local on macOS.
+for _c in "$HOME"/.nvm/versions/node/*/lib/node_modules/ccstatusline/dist/ccstatusline.js \
+          /opt/homebrew/lib/node_modules/ccstatusline/dist/ccstatusline.js \
+          /usr/local/lib/node_modules/ccstatusline/dist/ccstatusline.js; do
   [ -f "$_c" ] && CCS_JS="$_c"
 done
 

@@ -33,6 +33,8 @@ your config silently. The steps are:
    ```bash
    npm i -g ccstatusline@2.2.22
    ```
+   The script looks for the dist under `~/.nvm/versions/node/*`, `/opt/homebrew` and
+   `/usr/local` (Homebrew node on macOS has no nvm — that path is covered too).
    For the exact colors, also copy the bundled ccstatusline config:
    ```bash
    mkdir -p ~/.config/ccstatusline

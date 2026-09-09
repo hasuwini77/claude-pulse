@@ -46,6 +46,7 @@ cat <<EOF
    Install ccstatusline globally (the statusline calls its binary directly; without
    it the script falls back to npx and re-bootstraps npm on every render):
      npm i -g ccstatusline@2.2.22
+   (looked up under ~/.nvm, /opt/homebrew and /usr/local)
 
    (Optional, for the exact statusline colors) copy the bundled ccstatusline config:
      mkdir -p ~/.config/ccstatusline

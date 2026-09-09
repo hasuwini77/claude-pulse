@@ -1,5 +1,11 @@
 # claude-pulse — Progress
 
+## 2026-09-09
+
+### Perf: global ccstatusline lookup now covers Homebrew / /usr/local
+PR #6 made the statusline call the globally installed `ccstatusline` dist directly, but only searched `~/.nvm/versions/node/*`. The Mac runs Homebrew node (no nvm), so every render still fell through to `npx ccstatusline@2.2.22` — 1.2s wall / 1.15s user CPU per paint, multiplied by every open Claude session. Added `/opt/homebrew/lib/node_modules` and `/usr/local/lib/node_modules` to the glob (no `npm root -g` call — that is itself a node process). Measured: full statusline render 0.37s wall / 0.30s user after; direct node 0.29s vs npx 1.21s.
+
+
 ## 2026-08-31
 
 ### Fix: WezTerm "Font problem" popup — worktree glyph in no installed font

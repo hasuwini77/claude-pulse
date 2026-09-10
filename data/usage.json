@@ -1,12 +1,12 @@
 {
-  "fetched_at": "2026-09-10T13:00:03.780Z",
+  "fetched_at": "2026-09-10T13:15:03.747Z",
   "five_hour": {
-    "utilization": 4,
-    "resets_at": "2026-09-10T16:40:00.099499+00:00"
+    "utilization": 5,
+    "resets_at": "2026-09-10T16:40:00.014552+00:00"
   },
   "weekly": {
     "utilization": 71,
-    "resets_at": "2026-09-11T18:00:00.099520+00:00"
+    "resets_at": "2026-09-11T18:00:00.014572+00:00"
   },
   "weekly_sonnet": {
     "utilization": null,
@@ -22,6 +22,5 @@
     "used_credits": 0,
     "currency": "EUR"
   },
-  "error": "token-unresolved",
-  "last_attempt_at": "2026-09-10T13:00:23.066Z"
+  "error": null
 }

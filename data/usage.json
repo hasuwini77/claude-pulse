@@ -1,12 +1,12 @@
 {
-  "fetched_at": "2026-09-09T22:15:03.029Z",
+  "fetched_at": "2026-09-10T00:45:03.074Z",
   "five_hour": {
-    "utilization": 22,
-    "resets_at": "2026-09-09T23:50:00.486437+00:00"
+    "utilization": 0,
+    "resets_at": null
   },
   "weekly": {
     "utilization": 68,
-    "resets_at": "2026-09-11T18:00:00.486466+00:00"
+    "resets_at": "2026-09-11T18:00:00.434423+00:00"
   },
   "weekly_sonnet": {
     "utilization": null,
@@ -22,6 +22,5 @@
     "used_credits": 0,
     "currency": "EUR"
   },
-  "error": "http-429",
-  "last_attempt_at": "2026-09-10T00:30:03.292Z"
+  "error": null
 }

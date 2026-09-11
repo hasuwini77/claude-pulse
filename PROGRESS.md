@@ -1,5 +1,45 @@
 # claude-pulse — Progress
 
+## 2026-09-11
+
+### Fix: statusline self-heals a stalled launchd fetch job (issue #9)
+The macOS `com.claude-pulse.fetch` LaunchAgent (`StartInterval=900`) silently
+stopped firing for 12h40m while the Mac stayed awake the whole time — no
+error anywhere, `launchctl print` reported `last exit code = 0`. The
+statusline kept showing a 12h-old snapshot with no way to know the scheduler
+itself had gone quiet. A manual `launchctl kickstart gui/$UID/com.claude-pulse.fetch`
+ran it instantly, so the timer wasn't broken — it had just stopped being
+told to fire.
+
+- **Fix.** `statusline/claude-pulse-statusline.js` now calls a new
+  `kickFetcherIfStale(fetchedAt)` at the end of `main()`, on every render
+  path (including the degraded no-data branch). On macOS only, if the
+  snapshot is older than 20 minutes (or `fetched_at` is missing/unparseable)
+  and `~/Library/LaunchAgents/com.claude-pulse.fetch.plist` is installed, it
+  runs `launchctl kickstart gui/$UID/com.claude-pulse.fetch` — deliberately
+  without `-k`, so a job already mid-run is never restarted. A stamp file in
+  `$TMPDIR` throttles this to at most one kick per 15 minutes across every
+  open session, and `os`/`child_process` are only required lazily on the
+  stale path so the normal fresh-render hot path pays nothing extra.
+- **Consumer boundary preserved.** Per `CONTRACT.md` the scheduler stays the
+  only producer of usage data; the statusline still never fetches or touches
+  the network itself — it only asks launchd to run the job sooner. The
+  contract now says so explicitly.
+- **Docs correction.** `statusline/README.md` claimed the segment "falls
+  back to `--`... when fetched more than 30 minutes ago" — untrue; stale
+  data keeps showing the last known values with a red `!`, and `--` only
+  appears when `usage.json` itself is missing or unreadable. Fixed, and
+  added a Self-heal section. `scheduler/README.md` gained a troubleshooting
+  note for a stalled `StartInterval` job (`launchctl print ... | grep 'runs
+  =\|last exit'` to check, `launchctl kickstart` to recover manually).
+- **Measured.** `statusline/test-self-heal.sh` covers all 6 cases (stale
+  kicks once, cooldown holds on an immediate second stale render, a fresh
+  snapshot never kicks, no kick when the plist isn't installed, the
+  degraded/missing-`usage.json` path still kicks once, `-k` never appears in
+  any invocation) — 10/10 assertions PASS. 20 fresh renders in a temp
+  sandbox timed before and after the change to confirm the hot path is
+  unaffected (numbers in the PR).
+
 ## 2026-09-09
 
 ### Perf: global ccstatusline lookup now covers Homebrew / /usr/local

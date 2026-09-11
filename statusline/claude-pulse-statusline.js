@@ -15,6 +15,21 @@
  *
  * Stale threshold: fetched_at older than 30 minutes → treat all values as missing.
  *
+ * Self-heal (macOS only): on 2026-09-11 the launchd LaunchAgent
+ * (`com.claude-pulse.fetch`, StartInterval=900) silently stopped firing for
+ * 12h40m while the Mac stayed awake the whole time — no error anywhere,
+ * `last exit code = 0` — and the statusline just kept showing a 12h-old
+ * snapshot until a manual `launchctl kickstart` woke it back up instantly.
+ * So on every render this file also checks the snapshot's age and, if it is
+ * stale (or fetched_at is missing/unparseable), asks launchd to run the job
+ * now via `launchctl kickstart` — deliberately without `-k`, so a job
+ * already mid-run is never restarted. This is still read-only with respect
+ * to usage data: it does NOT fetch or touch the network itself. Per
+ * CONTRACT.md the scheduler stays the only producer; the statusline only
+ * triggers it. A cross-session cooldown stamp file caps this to at most one
+ * kick per 15 minutes, and it is a no-op unless the fetch LaunchAgent's
+ * plist is actually installed.
+ *
  * SECURITY: reads only usage.json — never the credentials file, never the network.
  */
 

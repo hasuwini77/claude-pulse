@@ -2,7 +2,9 @@
 
 All three surfaces (core fetcher, statusline, dashboard) bind to this. The fetcher is the
 only producer; statusline + dashboard are read-only consumers. Never read the raw Anthropic
-endpoint anywhere but the fetcher.
+endpoint anywhere but the fetcher. A consumer may trigger the scheduler job to run sooner
+(e.g. the statusline's stale-data `launchctl kickstart`) — it must never fetch usage data
+itself.
 
 ## Source endpoint (fetcher only — read-only)
 `GET https://api.anthropic.com/api/oauth/usage`

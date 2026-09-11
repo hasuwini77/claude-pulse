@@ -13,7 +13,7 @@
  *   amber  60 ≤ x < 85
  *   red    ≥ 85
  *
- * Stale threshold: fetched_at older than 30 minutes → treat all values as missing.
+ * Stale threshold: fetched_at older than 30 minutes → keep the last values, append a red `!`.
  *
  * Self-heal (macOS only): on 2026-09-11 the launchd LaunchAgent
  * (`com.claude-pulse.fetch`, StartInterval=900) silently stopped firing for

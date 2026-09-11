@@ -120,6 +120,16 @@ function kickFetcherIfStale(fetchedAt) {
     const os = require("node:os");
     const { spawn } = require("node:child_process");
 
+    // Nothing to kick if the fetch LaunchAgent was never installed (Linux/
+    // Windows schedulers, or a macOS checkout that only ever runs manually).
+    const plistPath = path.join(
+      os.homedir(),
+      "Library",
+      "LaunchAgents",
+      `${JOB_LABEL}.plist`
+    );
+    if (!fs.existsSync(plistPath)) return;
+
     // Cross-session cooldown: at most one kick per KICK_COOLDOWN_MS, enforced
     // via a stamp file's mtime so every statusline invocation (each is a
     // fresh process) shares the same throttle.

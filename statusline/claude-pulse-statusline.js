@@ -105,6 +105,50 @@ function fmtCredits(extra) {
   return `${sym}${used}/${limit}`;
 }
 
+// --- Self-heal: kick launchd when the snapshot is stale ---
+const KICK_AFTER_MS = 20 * 60 * 1000;
+const KICK_COOLDOWN_MS = 15 * 60 * 1000;
+const JOB_LABEL = "com.claude-pulse.fetch";
+
+function kickFetcherIfStale(fetchedAt) {
+  try {
+    if (process.platform !== "darwin") return;
+
+    const age = Date.now() - new Date(fetchedAt).getTime();
+    if (!(age > KICK_AFTER_MS) && Number.isFinite(age)) return;
+
+    const os = require("node:os");
+    const { spawn } = require("node:child_process");
+
+    // Cross-session cooldown: at most one kick per KICK_COOLDOWN_MS, enforced
+    // via a stamp file's mtime so every statusline invocation (each is a
+    // fresh process) shares the same throttle.
+    const stampPath = path.join(os.tmpdir(), "claude-pulse-kick.stamp");
+    try {
+      const stat = fs.statSync(stampPath);
+      if (Date.now() - stat.mtimeMs < KICK_COOLDOWN_MS) return;
+    } catch {
+      // No stamp yet — proceed to kick.
+    }
+
+    try {
+      fs.writeFileSync(stampPath, String(Date.now()));
+    } catch {
+      // If we can't write the stamp, still attempt the kick below.
+    }
+
+    const child = spawn(
+      "launchctl",
+      ["kickstart", `gui/${process.getuid()}/${JOB_LABEL}`],
+      { detached: true, stdio: "ignore" }
+    );
+    child.on("error", () => {});
+    child.unref();
+  } catch {
+    // Self-heal must never break or delay the render.
+  }
+}
+
 // --- Main ---
 function main() {
   const dataPath = resolveDataPath();
@@ -128,6 +172,7 @@ function main() {
     process.stdout.write(
       `${DIM}◔ 5h --  ◔ wk --  ⚡ --${RESET}\n`
     );
+    kickFetcherIfStale(null);
     return;
   }
 
@@ -162,6 +207,8 @@ function main() {
   const warningMarker = showWarning ? `  ${RED}!${RESET}` : "";
 
   process.stdout.write(parts.join("  ") + warningMarker + "\n");
+
+  kickFetcherIfStale(snapshot.fetched_at);
 }
 
 main();

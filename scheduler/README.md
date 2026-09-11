@@ -102,6 +102,34 @@ bash scheduler/fetch-and-commit.sh
 
 ---
 
+## Troubleshooting: launchd stopped firing (macOS)
+
+On 2026-09-11 the `com.claude-pulse.fetch` LaunchAgent silently stopped
+firing for 12h40m while the Mac stayed awake — no error, and
+`launchctl print` reported `last exit code = 0` the whole time. There is no
+crash to see; the timer just never fired again.
+
+**Symptom:** the statusline shows a stale snapshot with a red `!` for far
+longer than 15 minutes.
+
+**Check it:**
+```bash
+launchctl print gui/$(id -u)/com.claude-pulse.fetch | grep -E 'runs =|last exit'
+```
+If `runs` hasn't incremented in a while, the timer is wedged.
+
+**Recover it:**
+```bash
+launchctl kickstart gui/$(id -u)/com.claude-pulse.fetch
+```
+
+As of this fix, the statusline segment does this automatically — it checks
+the snapshot's age on every render and self-kicks (throttled to once per 15
+minutes) when the data goes stale, so this is normally only needed for
+manual debugging. See `statusline/README.md`'s Self-heal section.
+
+---
+
 ## Logs
 
 | File                          | Written by        |

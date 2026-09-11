@@ -13,7 +13,22 @@
  *   amber  60 ≤ x < 85
  *   red    ≥ 85
  *
- * Stale threshold: fetched_at older than 30 minutes → treat all values as missing.
+ * Stale threshold: fetched_at older than 30 minutes → keep the last values, append a red `!`.
+ *
+ * Self-heal (macOS only): on 2026-09-11 the launchd LaunchAgent
+ * (`com.claude-pulse.fetch`, StartInterval=900) silently stopped firing for
+ * 12h40m while the Mac stayed awake the whole time — no error anywhere,
+ * `last exit code = 0` — and the statusline just kept showing a 12h-old
+ * snapshot until a manual `launchctl kickstart` woke it back up instantly.
+ * So on every render this file also checks the snapshot's age and, if it is
+ * stale (or fetched_at is missing/unparseable), asks launchd to run the job
+ * now via `launchctl kickstart` — deliberately without `-k`, so a job
+ * already mid-run is never restarted. This is still read-only with respect
+ * to usage data: it does NOT fetch or touch the network itself. Per
+ * CONTRACT.md the scheduler stays the only producer; the statusline only
+ * triggers it. A cross-session cooldown stamp file caps this to at most one
+ * kick per 15 minutes, and it is a no-op unless the fetch LaunchAgent's
+ * plist is actually installed.
  *
  * SECURITY: reads only usage.json — never the credentials file, never the network.
  */
@@ -105,6 +120,60 @@ function fmtCredits(extra) {
   return `${sym}${used}/${limit}`;
 }
 
+// --- Self-heal: kick launchd when the snapshot is stale ---
+const KICK_AFTER_MS = 20 * 60 * 1000;
+const KICK_COOLDOWN_MS = 15 * 60 * 1000;
+const JOB_LABEL = "com.claude-pulse.fetch";
+
+function kickFetcherIfStale(fetchedAt) {
+  try {
+    if (process.platform !== "darwin") return;
+
+    const age = Date.now() - new Date(fetchedAt).getTime();
+    if (!(age > KICK_AFTER_MS) && Number.isFinite(age)) return;
+
+    const os = require("node:os");
+    const { spawn } = require("node:child_process");
+
+    // Nothing to kick if the fetch LaunchAgent was never installed (Linux/
+    // Windows schedulers, or a macOS checkout that only ever runs manually).
+    const plistPath = path.join(
+      os.homedir(),
+      "Library",
+      "LaunchAgents",
+      `${JOB_LABEL}.plist`
+    );
+    if (!fs.existsSync(plistPath)) return;
+
+    // Cross-session cooldown: at most one kick per KICK_COOLDOWN_MS, enforced
+    // via a stamp file's mtime so every statusline invocation (each is a
+    // fresh process) shares the same throttle.
+    const stampPath = path.join(os.tmpdir(), "claude-pulse-kick.stamp");
+    try {
+      const stat = fs.statSync(stampPath);
+      if (Date.now() - stat.mtimeMs < KICK_COOLDOWN_MS) return;
+    } catch {
+      // No stamp yet — proceed to kick.
+    }
+
+    try {
+      fs.writeFileSync(stampPath, String(Date.now()));
+    } catch {
+      // If we can't write the stamp, still attempt the kick below.
+    }
+
+    const child = spawn(
+      "launchctl",
+      ["kickstart", `gui/${process.getuid()}/${JOB_LABEL}`],
+      { detached: true, stdio: "ignore" }
+    );
+    child.on("error", () => {});
+    child.unref();
+  } catch {
+    // Self-heal must never break or delay the render.
+  }
+}
+
 // --- Main ---
 function main() {
   const dataPath = resolveDataPath();
@@ -128,6 +197,7 @@ function main() {
     process.stdout.write(
       `${DIM}◔ 5h --  ◔ wk --  ⚡ --${RESET}\n`
     );
+    kickFetcherIfStale(null);
     return;
   }
 
@@ -162,6 +232,8 @@ function main() {
   const warningMarker = showWarning ? `  ${RED}!${RESET}` : "";
 
   process.stdout.write(parts.join("  ") + warningMarker + "\n");
+
+  kickFetcherIfStale(snapshot.fetched_at);
 }
 
 main();
